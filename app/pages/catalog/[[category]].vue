@@ -26,7 +26,7 @@
         v-if="data"
         :active="category"
         :counts="data.categoryCounts"
-        :query="categoryQuery"
+        :query-for="categoryQuery"
         class="mt-5"
       />
     </header>
@@ -66,6 +66,21 @@
           :step="1"
           @commit="selectPriceRange"
         />
+
+        <template v-if="ratingFilter || !category">
+          <USeparator />
+
+          <UiRangeFilter
+            v-if="ratingFilter"
+            v-bind="ratingFilter"
+            :range="ratingRange"
+            @commit="selectRatingRange"
+          />
+          <UiRatingHint
+            v-else
+            :query-for="categoryQuery"
+          />
+        </template>
       </aside>
 
       <section
@@ -128,6 +143,21 @@
                   :step="1"
                   @commit="selectPriceRange"
                 />
+
+                <template v-if="ratingFilter || !category">
+                  <USeparator class="my-6" />
+
+                  <UiRangeFilter
+                    v-if="ratingFilter"
+                    v-bind="ratingFilter"
+                    :range="ratingRange"
+                    @commit="selectRatingRange"
+                  />
+                  <UiRatingHint
+                    v-else
+                    :query-for="categoryQuery"
+                  />
+                </template>
               </template>
 
               <template #footer>
@@ -156,7 +186,7 @@
             >
             <USelect
               id="sort"
-              :model-value="params.sort"
+              :model-value="data?.params.sort ?? params.sort"
               :items="sortItems"
               class="min-w-44 sm:min-w-52"
               @update:model-value="(sort) => update({ sort, page: 1 })"
@@ -218,7 +248,14 @@
 <script setup lang="ts">
 import type { BreadcrumbItem } from "@nuxt/ui"
 import { ALL_PRODUCTS, CATEGORIES, isCategory } from "#shared/catalog"
-import { PER_PAGE_OPTIONS, rangeParams, SORT_LABELS, SORTS, toListingQuery } from "#shared/listing"
+import {
+  PER_PAGE_OPTIONS,
+  RATING_FILTERS,
+  rangeParams,
+  sortLabel,
+  sortsFor,
+  toListingQuery
+} from "#shared/listing"
 import type { ProductsResponse, Range } from "#shared/listing"
 
 definePageMeta({
@@ -267,15 +304,46 @@ function selectPriceRange(range: Range) {
   return update({ priceMin, priceMax, page: 1 })
 }
 
-function clearFilters() {
-  return update({ manufacturer: [], priceMin: undefined, priceMax: undefined, page: 1 })
+/** The Power or Capacity filter, on Solar panels and Batteries only */
+const ratingFilter = computed(() => {
+  const unit = category.value ? CATEGORIES[category.value].ratingUnit : null
+  const bounds = data.value?.ratingBounds
+  if (!unit || !bounds) return null
+  const { name, step, presets } = RATING_FILTERS[unit]
+  return { legend: `${name} (${unit})`, unit, bounds, step, presets }
+})
+
+const ratingRange = computed<Range>(() => ({
+  min: data.value?.params.ratingMin ?? data.value?.ratingBounds?.min ?? 0,
+  max: data.value?.params.ratingMax ?? data.value?.ratingBounds?.max ?? 0
+}))
+
+function selectRatingRange(range: Range) {
+  if (!data.value?.ratingBounds) return
+  const { min: ratingMin, max: ratingMax } = rangeParams(range, data.value.ratingBounds)
+  return update({ ratingMin, ratingMax, page: 1 })
 }
 
-const activeFilterCount = computed(
-  () =>
+function clearFilters() {
+  return update({
+    manufacturer: [],
+    priceMin: undefined,
+    priceMax: undefined,
+    ratingMin: undefined,
+    ratingMax: undefined,
+    page: 1
+  })
+}
+
+const activeFilterCount = computed(() => {
+  const shown = data.value?.params
+  const isSet = (min?: number, max?: number) => (min !== undefined || max !== undefined ? 1 : 0)
+  return (
     selectedManufacturers.value.length +
-    (data.value?.params.priceMin !== undefined || data.value?.params.priceMax !== undefined ? 1 : 0)
-)
+    isSet(shown?.priceMin, shown?.priceMax) +
+    isSet(shown?.ratingMin, shown?.ratingMax)
+  )
+})
 
 const filtersOpen = ref(false)
 
@@ -287,7 +355,9 @@ const selectedManufacturers = computed(() =>
 
 const page = computed(() => data.value?.params.page ?? 1)
 
-const sortItems = SORTS.map((value) => ({ label: SORT_LABELS[value], value }))
+const sortItems = computed(() =>
+  sortsFor(category.value).map((value) => ({ label: sortLabel(value, category.value), value }))
+)
 const perPageItems = PER_PAGE_OPTIONS.map((value) => ({ label: String(value), value }))
 
 const statusText = computed(() => {

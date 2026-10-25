@@ -2,6 +2,22 @@
   <fieldset class="min-w-0">
     <legend class="mb-3.5 text-sm font-semibold text-highlighted">{{ legend }}</legend>
 
+    <div
+      v-if="presets.length"
+      class="mb-4 flex flex-wrap gap-1.5"
+    >
+      <UButton
+        v-for="preset in presetItems"
+        :key="preset.label"
+        :label="preset.label"
+        :aria-pressed="preset.active"
+        :color="preset.active ? 'primary' : 'neutral'"
+        :variant="preset.active ? 'subtle' : 'outline'"
+        size="xs"
+        @click="commit(preset.active ? bounds : preset.range)"
+      />
+    </div>
+
     <USlider
       v-model="draft"
       :min="bounds.min"
@@ -51,13 +67,15 @@ const {
   bounds,
   range,
   step,
-  unit = ""
+  unit = "",
+  presets = []
 } = defineProps<{
   legend: string
   bounds: Range
   range: Range
   step: number
   unit?: string
+  presets?: { label: string; range: Range }[]
 }>()
 
 const emit = defineEmits<{
@@ -65,6 +83,17 @@ const emit = defineEmits<{
 }>()
 
 const id = useId()
+
+const presetItems = computed(() =>
+  presets.map((preset) => {
+    const normalised = normaliseRange(preset.range, bounds)
+    return {
+      label: preset.label,
+      range: normalised,
+      active: normalised.min === range.min && normalised.max === range.max
+    }
+  })
+)
 
 const draft = ref<number[]>([])
 const typed = reactive<Record<(typeof ENDS)[number], string>>({ min: "", max: "" })
