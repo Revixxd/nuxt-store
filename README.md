@@ -1,64 +1,54 @@
-# Nuxt Starter Template
+## [CORE-1] Kluczowe decyzje i dlaczego je podjąłem
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+**Architektura i Logika Biznesowa:**
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+- **Brak bazy danych i Pinii:** Stan filtrów, wyszukiwania, sortowania i paginacji trzymany jest w całości w URL (parsowany i walidowany przez schemat `zod`). Dzięki temu link z ustawionymi filtrami renderuje się poprawnie po stronie serwera (SSR), można go udostępnić, a nawigacja „wstecz” w przeglądarce działa bez zarzutu. Niepoprawne parametry w URL spadają do wartości domyślnych zamiast psuć stronę.
+- **Waluty i Ceny:** Założyłem, że ceny są podane w euro, netto (excl. VAT). Formatuję je przez `Intl.NumberFormat` z locale `en-IE` z dwoma miejscami po przecinku (np. 1499 → `€1,499.00`). Dla paneli i baterii liczę też cenę za jednostkę (`€/W`, `€/kWh`), co pozwala porównywać produkty o różnej mocy/pojemności.
+- **Routing i Layouty:** Listing działa pod `/catalog/[[category]]` (opcjonalny parametr: `/catalog` to wszystkie produkty, `/catalog/batteries` to kategoria) i korzysta z osobnego layoutu `catalog`. Jest to przygotowanie pod przyszłą rozbudowę o nowe widoki i strony. Nieznana kategoria zwraca błąd 404.
+- **Filtrowanie po stronie serwera:** Całe filtrowanie, sortowanie i paginacja dzieje się w endpoincie `/api/products`, a klient dostaje tylko bieżącą stronę wyników razem z licznikami (kategorie, producenci) i zakresami suwaków.
+- **Menedżer pakietów:** Użyłem `pnpm` - na dysku oszczędza miejsce.
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+**Optymalizacja i Wydajność (Performance):**
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+- **Wyszukiwarka:** Zapytanie wysyłane jest z debounce 300 ms (`useDebounceFn` z VueUse) i dopiero od 2 znaków, co zapobiega niepotrzebnym strzałom do serwera przy każdym wciśnięciu klawisza. Kolejne zmiany w trakcie jednego pisania podmieniają wpis w historii (`replace`), żeby „wstecz” nie przechodziło po każdej literze.
+- **Paginacja:** Domyślnie 12 produktów na stronę (opcje: 12, 24, 48). Mniejsza strona to mniejszy payload HTML z SSR i mniej elementów do wyrenderowania.
+- **Lighthouse / CLS:** Karta produktu ma stały kontener na grafikę (`aspect-ratio 4/3`), w którym obecnie wyświetlana jest ikona kategorii. Po dodaniu prawdziwych zdjęć układ nie będzie przeskakiwał.
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+**UX :**
 
-## Quick Start
+- **Responsywność:** Na desktopie (od breakpointu `lg`) filtry znajdują się w kolumnie po lewej stronie. Na tabletach i mobile filtry są ukryte pod przyciskiem „Filters” (z licznikiem aktywnych filtrów), a siatka produktów zajmuje całą szerokość.
+- **Filtry w wysuwanym panelu (Drawer):** Na mniejszych urządzeniach filtry otwierają się w panelu wysuwanym od dołu, z przyciskami „Clear all” i „Show N products”. Użytkownik skupia się na jednym zadaniu na raz, a lista produktów nie jest spychana w dół przez rozbudowane filtry.
+- **Aktywne filtry:** Wybrane filtry wyświetlane są jako „chipy” z możliwością usunięcia pojedynczego filtra lub wszystkich naraz. Pusty wynik pokazuje komunikat z akcją wyczyszczenia filtrów.
 
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
+## [CORE-2] Jak pozyskałem kWh/W i jakie przypadki brzegowe obsłużyłem
 
-## Deploy your own
+- **Parsowanie:** Do odczytu danych użyłem paczki `csv-parse/sync`. Uzasadnienie: jest sprawdzona i stabilna, choć autorski parser pozwoliłby na mniejszą ilość zależności. Plik leży w `server/assets` (Nitro server assets, więc trafia do builda i działa na każdym hostingu), jest parsowany tylko raz przy pierwszym odczycie i trzymany w pamięci.
+- **Reguły i algorytm:** Baterie mają zawsze podaną wartość `kWh` w opisie, a każdy panel ma wartość `W`. Akcesoria nie mają tych wartości. Z opisu biorę **pierwszą liczbę bezpośrednio przed jednostką kategorii** (`W` dla paneli, `kWh` dla baterii) i sprawdzam ją krzyżowo z **ostatnią liczbą w nazwie** produktu (np. „PowerFlow Stack 7.5” → 7.5).
+- **Przypadki brzegowe (Edge cases):**
+  - 5 baterii ma w opisie drugą wartość `kWh` (np. „up to 30kWh”, „three 3.5kWh modules”) - wzięcie pierwszego wystąpienia zwraca właściwą pojemność.
+  - 3 baterie mają dopisek „48V”, a część opisów zawiera inne wartości z jednostką `V` - zakotwiczenie na pełnej jednostce (`kWh`/`W` z granicą słowa) je pomija.
+  - Jeśli wartość z opisu i z nazwy się nie zgadzają albo jej brak, produkt dostaje `rating = null` i w logach serwera pojawia się ostrzeżenie - zamiast pokazywać błędną wartość.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+## [CORE-3] [SEO] Podejście do indeksowania
 
-## Setup
+- **Link kanoniczny:** Ustawiony zawsze na stronę główną danej kategorii (np. URL z `?page=12` kieruje kanonicznie do samej kategorii, aby przeciwdziałać duplikacji treści).
+- **Robots Meta Tag:** Używam dyrektywy `noindex, follow`, gdy URL zawiera parametr wyszukiwania (`q`) lub numer strony jest większy niż 1 (`page > 1`). Pozwala to botom podążać za odnośnikami, ale trzyma podstrony listingu o mniejszej wartości z dala od indeksu Google.
+- **Tytuł z filtrów:** `<title>` budowany jest z aktywnych filtrów, np. „Batteries 5–10 kWh · PowerFlow | nuxt-store” (przy 3+ producentach: „3 manufacturers”), a opis meta zawiera liczbę produktów.
+- **Opisy kategorii:** Każda kategoria posiada własny, krótki opis, co podnosi wartość w SEO.
 
-Make sure to install the dependencies:
+## [CORE-4] Jakby było więcej czasu (Czego celowo nie zrobiłem)
 
-```bash
-pnpm install
-```
+- **Dynamiczne kategorie:** Linki kategorii w nagłówku (`categoryLinks` w `app/layouts/catalog.vue`) powinny być generowane z jednego źródła.
+- **Analityka:** Integracja z Google Analytics oraz Microsoft Clarity.
+- **SEO & Open Graph:** Dane strukturalne Schema.org (`ItemList`, `Product`, `BreadcrumbList`), sitemap, `robots.txt` i obrazy Open Graph - najprościej przez moduł `nuxt-seo` (`@nuxtjs/sitemap`, `@nuxtjs/robots`, `nuxt-schema-org`, `nuxt-og-image`).
+- **Lighthouse / Wydajność:** Moduł `@nuxt/fonts` (self-hosting fontów). imgproxy lub `@nuxt/image` do serwowania zdjęć w odpowiednich rozmiarach i formatach. Cache odpowiedzi API, a przy większym katalogu wyszukiwarka pełnotekstowa (np. Elasticsearch). Migracja na Vite+. Przy linkach do stron produktowych.
+- **UX / i18n:** Moduł Nuxt i18n do zmiany języka, regionu oraz waluty. Przełącznik widoku listingu (małe/duże kafelki, lista). Dodanie „quick links” do stopki.
+- **WCAG (Wyszukiwarka):** Podpowiedzi w wyszukiwarce z pełną obsługą WAI-ARIA: pole z `role="combobox"` i `aria-activedescendant`, lista `role="listbox"` z grupami, nawigacja klawiaturą (↑/↓, Enter, Esc) ze skrótami opisanymi w stopce listy.
+- **Architektura:** Ewentualne wydzielenie komponentów UI do osobnej warstwy Nuxt (monorepo), gdyby miały być wykorzystywane w innych aplikacjach.
 
-## Development Server
+## [CORE-6] Realizowane kroki
 
-Start the development server on `http://localhost:3000`:
-
-```bash
-pnpm dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-pnpm build
-```
-
-Locally preview production build:
-
-```bash
-pnpm preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
-
-## Renovate integration
-
-Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.
+1. Pierwszym krokiem było użycie narzędzia Claude Design do stworzenia wczesnego prototypu widoków (HTML) – pliki w katalogu `html_figma_view/`.
+2. Konfiguracja środowiska dedykowana dla AI, wygenerowana z instrukcji: `/setup-matt-pocock-skills`.
+3. Pierwsza sesja to wczytanie kontekstu: `init` oraz `/grill-with-docs`.
+4. Każde zdefiniowane zadanie było od teraz realizowane w osobnej, świeżej sesji. Pozwalało to na uniknięcie gubienia wątków i halucynacji przez LLM.
