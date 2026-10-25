@@ -463,4 +463,45 @@ const statusText = computed(() => {
   const to = Math.min(shown.page * shown.perPage, total)
   return `Showing ${from}–${to} of ${total} products`
 })
+
+const seoTitle = computed(() => {
+  const shown = data.value?.params ?? params.value
+  const heading = [info.value.label]
+  const ratingBounds = data.value?.ratingBounds
+  if (
+    ratingFilter.value &&
+    ratingBounds &&
+    (shown.ratingMin !== undefined || shown.ratingMax !== undefined)
+  ) {
+    heading.push(
+      formatRatingRange(
+        shown.ratingMin ?? ratingBounds.min,
+        shown.ratingMax ?? ratingBounds.max,
+        ratingFilter.value.unit
+      )
+    )
+  }
+  const names = shown.manufacturer.flatMap(
+    (slug) => data.value?.manufacturers.find((m) => m.slug === slug)?.name ?? []
+  )
+  const manufacturers =
+    names.length >= 3 ? `${names.length} manufacturers` : names.join(", ") || undefined
+  return `${[heading.join(" "), manufacturers].filter(Boolean).join(" · ")} | nuxt-store`
+})
+
+const seoDescription = computed(() => {
+  const total = data.value?.total ?? 0
+  return `${info.value.description} ${total} ${total === 1 ? "product" : "products"}.`
+})
+
+const robots = computed(() => {
+  const shown = data.value?.params ?? params.value
+  return shown.q || shown.page > 1 ? "noindex, follow" : "index, follow"
+})
+
+const { siteUrl } = useRuntimeConfig().public
+const canonical = computed(() => `${siteUrl}/catalog${category.value ? `/${category.value}` : ""}`)
+
+useSeoMeta({ title: seoTitle, description: seoDescription, robots })
+useHead({ link: [{ rel: "canonical", href: canonical }] })
 </script>

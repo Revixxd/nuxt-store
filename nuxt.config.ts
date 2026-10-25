@@ -12,6 +12,12 @@ export default defineNuxtConfig({
     colorMode: false
   },
 
+  runtimeConfig: {
+    public: {
+      siteUrl: "https://nuxt-store.vercel.app"
+    }
+  },
+
   routeRules: {
     // TEMP: the Listing is the only page for now
     "/": { redirect: "/catalog" }
