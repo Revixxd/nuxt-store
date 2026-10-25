@@ -1,5 +1,15 @@
 # CLAUDE.md
 
+## Git
+
+Never commit or push. The user always commits manually. This overrides any skill step (for example `/implement`) that says to commit: leave the changes uncommitted in the working tree and say they are ready to commit.
+
+When proposing a commit message, start it with `[TASK-{number}]`, where the number is the ticket's number from `.scratch/<feature>/issues/NN-<slug>.md` (for example `[TASK-01] Project setup and page shell`).
+
+## Code layout
+
+Presentational UI components go in `app/components/ui/`. Nuxt auto-imports them with the `Ui` prefix (`app/components/ui/AppLogo.vue` → `<UiAppLogo />`).
+
 ## Agent skills
 
 ### Issue tracker

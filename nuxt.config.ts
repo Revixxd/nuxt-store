@@ -1,12 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui'],
+  modules: ["@nuxt/eslint", "@nuxt/ui"],
 
   devtools: {
     enabled: true
   },
 
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
 
   ui: {
     colorMode: false
@@ -14,10 +14,10 @@ export default defineNuxtConfig({
 
   routeRules: {
     // TEMP: the Listing is the only page for now
-    '/': { redirect: '/catalog' }
+    "/": { redirect: "/catalog" }
   },
 
-  compatibilityDate: '2026-06-30',
+  compatibilityDate: "2026-06-30",
 
   typescript: {
     tsConfig: {
