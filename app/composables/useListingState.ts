@@ -15,8 +15,8 @@ export function useListingState() {
     return { query: toListingQuery({ ...params.value, ...changes }) }
   }
 
-  function update(changes: Partial<ListingParams>) {
-    return navigateTo(linkTo(changes))
+  function update(changes: Partial<ListingParams>, { replace = false } = {}) {
+    return navigateTo(linkTo(changes), { replace })
   }
 
   return { params, categoryQuery, linkTo, update }

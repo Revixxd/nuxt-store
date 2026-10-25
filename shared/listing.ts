@@ -48,11 +48,11 @@ export function sortsFor(category: Category | null): Sort[] {
     : SORTS.filter((sort) => !RATING_SORTS.has(sort))
 }
 
-export function sortLabel(sort: Sort, category: Category | null): string {
+export function sortLabel(sort: Sort, category: Category | null, searching = false): string {
   const unit = category ? CATEGORIES[category].ratingUnit : null
   const name = unit ? RATING_FILTERS[unit].name : "Rating"
   return {
-    featured: "Featured",
+    featured: searching ? "Best match" : "Featured",
     "price-asc": "Price: low to high",
     "price-desc": "Price: high to low",
     "name-asc": "Name: A–Z",
@@ -65,8 +65,16 @@ export function sortLabel(sort: Sort, category: Category | null): string {
 export const PER_PAGE_OPTIONS = [12, 24, 48] as const
 export type PerPage = (typeof PER_PAGE_OPTIONS)[number]
 
+/** Shorter search text is treated as no search */
+export const MIN_QUERY_LENGTH = 2
+
 export const listingQuerySchema = z.object({
-  /** Manufacturer slugs, comma-separated in the URL */
+  q: z
+    .string()
+    .trim()
+    .transform((value) => (value.length >= MIN_QUERY_LENGTH ? value : undefined))
+    .optional()
+    .catch(undefined),
   manufacturer: z
     .string()
     .transform((value) => [...new Set(value.split(",").map((slug) => slug.trim()))].filter(Boolean))
@@ -113,13 +121,12 @@ export function paramsForCategorySwitch(
   category: Category | null
 ): ListingParams {
   const sort = sortsFor(category).includes(params.sort) ? params.sort : DEFAULT_PARAMS.sort
-  return { ...DEFAULT_PARAMS, sort }
+  return { ...DEFAULT_PARAMS, q: params.q, sort }
 }
 
 export interface ManufacturerFacet {
   slug: string
   name: string
-  /** Products matching every Filter except the Manufacturer Filter */
   count: number
 }
 

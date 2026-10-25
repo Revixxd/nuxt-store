@@ -22,6 +22,13 @@
         {{ info.description }}
       </p>
 
+      <UiSearchField
+        :query="params.q"
+        :loading="pending"
+        class="mt-6"
+        @commit="search"
+      />
+
       <UiCategoryTabs
         v-if="data"
         :active="category"
@@ -289,6 +296,10 @@ const { data, status } = await useFetch<ProductsResponse>("/api/products", {
 
 const pending = computed(() => status.value === "pending")
 
+function search(q: string | undefined, replace: boolean) {
+  return update({ q, page: 1 }, { replace })
+}
+
 function selectManufacturers(manufacturer: string[]) {
   return update({ manufacturer, page: 1 })
 }
@@ -356,7 +367,10 @@ const selectedManufacturers = computed(() =>
 const page = computed(() => data.value?.params.page ?? 1)
 
 const sortItems = computed(() =>
-  sortsFor(category.value).map((value) => ({ label: sortLabel(value, category.value), value }))
+  sortsFor(category.value).map((value) => ({
+    label: sortLabel(value, category.value, !!params.value.q),
+    value
+  }))
 )
 const perPageItems = PER_PAGE_OPTIONS.map((value) => ({ label: String(value), value }))
 

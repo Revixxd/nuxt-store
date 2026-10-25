@@ -38,6 +38,21 @@ function boundsOf(values: number[]): Range {
   return { min: Math.floor(Math.min(...values)), max: Math.ceil(Math.max(...values)) }
 }
 
+function searchWords(q: string | undefined): string[] {
+  return q ? q.toLowerCase().split(/\s+/) : []
+}
+
+function matchesSearch(product: Product, words: string[]): boolean {
+  const text = [product.name, product.manufacturer, product.description].join(" ").toLowerCase()
+  return words.every((word) => text.includes(word))
+}
+
+function bestMatch(products: Product[], word: string): Product[] {
+  const byName = products.filter((p) => p.name.toLowerCase().includes(word))
+  const named = new Set(byName)
+  return [...byName, ...products.filter((p) => !named.has(p))]
+}
+
 export function queryListing(
   products: Product[],
   category: Category | null,
@@ -45,17 +60,23 @@ export function queryListing(
 ): ProductsResponse {
   const query = parseListingQuery(rawQuery)
 
-  const inCategory = category ? products.filter((p) => p.category === category) : products
+  const words = searchWords(query.q)
+  const found = words.length ? products.filter((p) => matchesSearch(p, words)) : products
   const categoryCounts = Object.fromEntries(
-    CATEGORY_IDS.map((id) => [id, products.filter((p) => p.category === id).length])
+    CATEGORY_IDS.map((id) => [id, found.filter((p) => p.category === id).length])
   ) as Record<Category, number>
+
+  const inCategory = category ? products.filter((p) => p.category === category) : products
+  const foundInCategory = words.length
+    ? inCategory.filter((p) => matchesSearch(p, words))
+    : inCategory
 
   const priceBounds = boundsOf(inCategory.map((p) => p.price))
   const price = normaliseRange(
     { min: query.priceMin ?? priceBounds.min, max: query.priceMax ?? priceBounds.max },
     priceBounds
   )
-  const inPriceRange = inCategory.filter((p) => p.price >= price.min && p.price <= price.max)
+  const inPriceRange = foundInCategory.filter((p) => p.price >= price.min && p.price <= price.max)
 
   const ratingBounds =
     category && CATEGORIES[category].ratingUnit
@@ -86,7 +107,12 @@ export function queryListing(
 
   const sort = sortsFor(category).includes(query.sort) ? query.sort : "featured"
   const sorter = SORTERS[sort]
-  const sorted = sorter ? matching.toSorted(sorter) : matching
+  const sorted =
+    sort === "featured" && words.length
+      ? bestMatch(matching, words[0]!)
+      : sorter
+        ? matching.toSorted(sorter)
+        : matching
 
   const pageCount = Math.max(1, Math.ceil(matching.length / query.perPage))
   const { min: priceMin, max: priceMax } = rangeParams(price, priceBounds)

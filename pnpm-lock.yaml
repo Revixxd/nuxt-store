@@ -200,6 +200,9 @@ importers:
       '@nuxt/ui':
         specifier: ^4.12.0
         version: 4.12.0(9994dc5824ac772ec78604a02368faec)
+      '@vueuse/core':
+        specifier: ^14.4.0
+        version: 14.4.0(vue@3.5.44(typescript@6.0.3))
       csv-parse:
         specifier: ^7.0.3
         version: 7.0.3
