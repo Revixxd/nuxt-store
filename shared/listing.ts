@@ -20,6 +20,8 @@ export const listingQuerySchema = z.object({
     .string()
     .transform((value) => [...new Set(value.split(",").map((slug) => slug.trim()))].filter(Boolean))
     .catch([]),
+  priceMin: z.coerce.number().finite().optional().catch(undefined),
+  priceMax: z.coerce.number().finite().optional().catch(undefined),
   sort: z.enum(SORTS).catch("featured"),
   page: z.coerce.number().int().min(1).catch(1),
   perPage: z.coerce
@@ -36,20 +38,23 @@ export function parseListingQuery(query: unknown): ListingParams {
   return listingQuerySchema.parse(query && typeof query === "object" ? query : {})
 }
 
-function toQueryValue(value: ListingParams[keyof ListingParams]): string {
+function toQueryValue(value: ListingParams[keyof ListingParams]): string | undefined {
+  if (value === undefined) return undefined
   return Array.isArray(value) ? value.join(",") : String(value)
 }
 
-/** The URL query for the params, without default values */
 export function toListingQuery(params: ListingParams): Record<string, string> {
   return Object.fromEntries(
     Object.entries(params)
       .map(([key, value]) => [key, toQueryValue(value)] as const)
-      .filter(([key, value]) => value !== toQueryValue(DEFAULT_PARAMS[key as keyof ListingParams]))
+      .filter(
+        (entry): entry is readonly [string, string] =>
+          entry[1] !== undefined &&
+          entry[1] !== toQueryValue(DEFAULT_PARAMS[entry[0] as keyof ListingParams])
+      )
   )
 }
 
-/** The params on another Category: Manufacturer is dropped, sort is kept */
 export function paramsForCategorySwitch(params: ListingParams): ListingParams {
   return { ...DEFAULT_PARAMS, sort: params.sort }
 }
@@ -61,12 +66,30 @@ export interface ManufacturerFacet {
   count: number
 }
 
+export interface Range {
+  min: number
+  max: number
+}
+
+export function normaliseRange(range: Range, bounds: Range): Range {
+  const clamp = (value: number) => Math.min(Math.max(value, bounds.min), bounds.max)
+  const [min, max] = [clamp(range.min), clamp(range.max)].sort((a, b) => a - b) as [number, number]
+  return { min, max }
+}
+
+export function rangeParams(range: Range, bounds: Range): Partial<Range> {
+  return {
+    min: range.min > bounds.min ? range.min : undefined,
+    max: range.max < bounds.max ? range.max : undefined
+  }
+}
+
 export interface ProductsResponse {
   products: Product[]
   total: number
   pageCount: number
   params: ListingParams
   categoryCounts: Record<Category, number>
-  /** The current Category's Manufacturers, by name */
   manufacturers: ManufacturerFacet[]
+  priceBounds: Range
 }

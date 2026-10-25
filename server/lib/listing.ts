@@ -1,7 +1,7 @@
 import { CATEGORY_IDS } from "../../shared/catalog"
 import type { Category, Product } from "../../shared/catalog"
-import { parseListingQuery } from "../../shared/listing"
-import type { ManufacturerFacet, ProductsResponse, Sort } from "../../shared/listing"
+import { normaliseRange, parseListingQuery, rangeParams } from "../../shared/listing"
+import type { ManufacturerFacet, ProductsResponse, Range, Sort } from "../../shared/listing"
 
 const SORTERS: Record<Sort, ((a: Product, b: Product) => number) | null> = {
   featured: null,
@@ -10,22 +10,22 @@ const SORTERS: Record<Sort, ((a: Product, b: Product) => number) | null> = {
   "name-asc": (a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" })
 }
 
-/**
- * The Manufacturers of the given Products by name, with how many Products each
- * has. Called with every Filter applied except the Manufacturer Filter, so
- * selecting a Manufacturer never zeroes the others.
- */
-function countManufacturers(products: Product[]): ManufacturerFacet[] {
+function countManufacturers(inCategory: Product[], matching: Product[]): ManufacturerFacet[] {
   const bySlug = new Map<string, ManufacturerFacet>()
-  for (const p of products) {
-    const facet = bySlug.get(p.manufacturerSlug)
-    if (facet) facet.count++
-    else
-      bySlug.set(p.manufacturerSlug, { slug: p.manufacturerSlug, name: p.manufacturer, count: 1 })
+  for (const p of inCategory) {
+    if (!bySlug.has(p.manufacturerSlug))
+      bySlug.set(p.manufacturerSlug, { slug: p.manufacturerSlug, name: p.manufacturer, count: 0 })
   }
+  for (const p of matching) bySlug.get(p.manufacturerSlug)!.count++
   return [...bySlug.values()].sort((a, b) =>
     a.name.localeCompare(b.name, "en", { sensitivity: "base" })
   )
+}
+
+function priceBoundsOf(products: Product[]): Range {
+  if (!products.length) return { min: 0, max: 0 }
+  const prices = products.map((p) => p.price)
+  return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) }
 }
 
 export function queryListing(
@@ -40,19 +40,33 @@ export function queryListing(
     CATEGORY_IDS.map((id) => [id, products.filter((p) => p.category === id).length])
   ) as Record<Category, number>
 
-  const manufacturers = countManufacturers(inCategory)
+  const priceBounds = priceBoundsOf(inCategory)
+  const price = normaliseRange(
+    { min: query.priceMin ?? priceBounds.min, max: query.priceMax ?? priceBounds.max },
+    priceBounds
+  )
+  const inPriceRange = inCategory.filter((p) => p.price >= price.min && p.price <= price.max)
+
+  const manufacturers = countManufacturers(inCategory, inPriceRange)
   const offered = new Set(manufacturers.map((m) => m.slug))
   const manufacturer = query.manufacturer.filter((slug) => offered.has(slug))
   const selected = new Set(manufacturer)
   const matching = selected.size
-    ? inCategory.filter((p) => selected.has(p.manufacturerSlug))
-    : inCategory
+    ? inPriceRange.filter((p) => selected.has(p.manufacturerSlug))
+    : inPriceRange
 
   const sorter = SORTERS[query.sort]
   const sorted = sorter ? matching.toSorted(sorter) : matching
 
   const pageCount = Math.max(1, Math.ceil(matching.length / query.perPage))
-  const params = { ...query, manufacturer, page: Math.min(query.page, pageCount) }
+  const { min: priceMin, max: priceMax } = rangeParams(price, priceBounds)
+  const params = {
+    ...query,
+    manufacturer,
+    priceMin,
+    priceMax,
+    page: Math.min(query.page, pageCount)
+  }
   const start = (params.page - 1) * params.perPage
 
   return {
@@ -61,6 +75,7 @@ export function queryListing(
     pageCount,
     params,
     categoryCounts,
-    manufacturers
+    manufacturers,
+    priceBounds
   }
 }

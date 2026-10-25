@@ -56,6 +56,16 @@
           :selected="selectedManufacturers"
           @update:selected="selectManufacturers"
         />
+
+        <USeparator />
+
+        <UiRangeFilter
+          legend="Price (EUR, excl. VAT)"
+          :bounds="data.priceBounds"
+          :range="priceRange"
+          :step="1"
+          @commit="selectPriceRange"
+        />
       </aside>
 
       <section
@@ -108,6 +118,16 @@
                   :selected="selectedManufacturers"
                   @update:selected="selectManufacturers"
                 />
+
+                <USeparator class="my-6" />
+
+                <UiRangeFilter
+                  legend="Price (EUR, excl. VAT)"
+                  :bounds="data.priceBounds"
+                  :range="priceRange"
+                  :step="1"
+                  @commit="selectPriceRange"
+                />
               </template>
 
               <template #footer>
@@ -118,7 +138,7 @@
                   size="lg"
                   :disabled="!activeFilterCount"
                   class="flex-1 justify-center"
-                  @click="selectManufacturers([])"
+                  @click="clearFilters"
                 />
                 <UButton
                   :label="`Show ${data.total} products`"
@@ -198,8 +218,8 @@
 <script setup lang="ts">
 import type { BreadcrumbItem } from "@nuxt/ui"
 import { ALL_PRODUCTS, CATEGORIES, isCategory } from "#shared/catalog"
-import { PER_PAGE_OPTIONS, SORT_LABELS, SORTS, toListingQuery } from "#shared/listing"
-import type { ProductsResponse } from "#shared/listing"
+import { PER_PAGE_OPTIONS, rangeParams, SORT_LABELS, SORTS, toListingQuery } from "#shared/listing"
+import type { ProductsResponse, Range } from "#shared/listing"
 
 definePageMeta({
   layout: "catalog",
@@ -236,8 +256,26 @@ function selectManufacturers(manufacturer: string[]) {
   return update({ manufacturer, page: 1 })
 }
 
-/** One per selected Manufacturer, as the chips will show them */
-const activeFilterCount = computed(() => selectedManufacturers.value.length)
+const priceRange = computed<Range>(() => ({
+  min: data.value?.params.priceMin ?? data.value?.priceBounds.min ?? 0,
+  max: data.value?.params.priceMax ?? data.value?.priceBounds.max ?? 0
+}))
+
+function selectPriceRange(range: Range) {
+  if (!data.value) return
+  const { min: priceMin, max: priceMax } = rangeParams(range, data.value.priceBounds)
+  return update({ priceMin, priceMax, page: 1 })
+}
+
+function clearFilters() {
+  return update({ manufacturer: [], priceMin: undefined, priceMax: undefined, page: 1 })
+}
+
+const activeFilterCount = computed(
+  () =>
+    selectedManufacturers.value.length +
+    (data.value?.params.priceMin !== undefined || data.value?.params.priceMax !== undefined ? 1 : 0)
+)
 
 const filtersOpen = ref(false)
 
