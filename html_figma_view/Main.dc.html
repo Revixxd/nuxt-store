@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Product listing</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:var(--mut)}a:hover{color:var(--hi)}
+*,*::before,*::after{box-sizing:border-box}
+.ui-focus:focus-visible{outline:2px solid var(--p);outline-offset:2px}
+.ui-input:focus{outline:none;box-shadow:inset 0 0 0 2px var(--p)}
+.ui-ghost:hover{background:var(--elev);color:var(--hi)}
+.ui-outline:hover{background:var(--soft)}
+.ui-solid:hover{filter:brightness(0.92)}
+.ui-link:hover{color:var(--p)}
+.ui-row:hover{background:var(--soft)}
+.ui-card{transition:box-shadow .15s ease}
+.ui-card:hover{box-shadow:0 4px 16px rgba(15,23,42,.08)}
+.ui-check{width:16px;height:16px;margin:0;accent-color:var(--p);cursor:pointer}
+.rng{position:absolute;left:0;right:0;top:0;width:100%;height:20px;margin:0;background:transparent;pointer-events:none;-webkit-appearance:none;appearance:none}
+.rng:focus{outline:none}
+.rng::-webkit-slider-runnable-track{background:transparent;height:20px}
+.rng::-moz-range-track{background:transparent}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;margin-top:2px;border-radius:999px;background:var(--bg);border:2px solid var(--p);cursor:grab}
+.rng::-moz-range-thumb{pointer-events:auto;width:12px;height:12px;border-radius:999px;background:var(--bg);border:2px solid var(--p);cursor:grab}
+.rng:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--pr)}
+.rng:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px var(--pr)}
+.ui-spin{animation:ui-spin 1s linear infinite}
+@keyframes ui-spin{to{transform:rotate(360deg)}}
+.ui-skel{background:var(--acc);border-radius:6px;animation:ui-pulse 2s cubic-bezier(.4,0,.6,1) infinite}
+@keyframes ui-pulse{50%{opacity:.5}}
+@media (prefers-reduced-motion: reduce){.ui-spin,.ui-skel{animation:none}}
+.m-only{display:none!important}
+@media (max-width:1023px){
+.d-only{display:none!important}
+.m-only{display:inline-flex!important}
+.filters{display:none!important}
+.filters.is-open{display:flex!important;position:fixed;top:0;right:0;bottom:0;left:auto;z-index:50;width:min(100%,420px);max-width:none!important;flex:none!important;background:var(--bg);box-shadow:0 20px 25px -5px rgba(0,0,0,.25)}
+.filters.is-open .f-head-m,.filters.is-open .f-foot-m{display:flex!important}
+.filters.is-open .f-body{flex:1;min-height:0;overflow-y:auto;padding:16px}
+}
+@media (min-width:1024px){.m-backdrop{display:none}}
+</style>
+</helmet>
+<div style="--p: {{primary}}; --ps: {{primarySoft}}; --pr: {{primaryRing}}; --bg: {{th.bg}}; --soft: {{th.soft}}; --elev: {{th.elev}}; --acc: {{th.acc}}; --bd: {{th.bd}}; --bda: {{th.bda}}; --hi: {{th.hi}}; --txt: {{th.txt}}; --ton: {{th.ton}}; --mut: {{th.mut}}; --dim: {{th.dim}}; --inv: {{th.inv}}; --glass: {{th.glass}}; color-scheme: {{th.scheme}}; min-height: 100vh; background: var(--bg); color: var(--txt); font-family: 'Public Sans', ui-sans-serif, system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+
+<!-- UHeader -->
+<header style="position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--bd); background: var(--glass); backdrop-filter: blur(8px)">
+<div style="max-width: 1280px; min-height: 64px; margin: 0 auto; padding: 8px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<a href="#" class="ui-focus" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--hi); font-weight: 700; font-size: 20px; letter-spacing: -0.01em">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{primary}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+<span>Marketplace</span>
+</a>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px">
+<a href="#" aria-current="page" class="ui-focus" style="padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; color: {{primary}}">Products</a>
+<a href="#" class="ui-ghost ui-focus" style="padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; color: var(--mut)">Brands</a>
+<a href="#" class="ui-ghost ui-focus" style="padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; color: var(--mut)">Deals</a>
+<a href="#" class="ui-ghost ui-focus" style="padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; color: var(--mut)">For installers</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 6px">
+<!-- UColorModeButton -->
+<button type="button" aria-label="{{themeToggleLabel}}" onClick="{{toggleTheme}}" class="ui-ghost ui-focus" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 0; border-radius: 6px; background: transparent; color: var(--txt); cursor: pointer">
+<sc-if value="{{isDark}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></sc-if>
+<sc-if value="{{isLight}}" hint-placeholder-val="{{ true }}"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></sc-if>
+</button>
+<button type="button" class="ui-ghost ui-focus" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--txt); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+<span>Sign in</span>
+</button>
+<button type="button" aria-label="Cart, {{cart}} items" class="ui-ghost ui-focus" style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 0; border-radius: 6px; background: transparent; color: var(--txt); cursor: pointer">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+<sc-if value="{{hasCart}}" hint-placeholder-val="{{ false }}">
+<span style="position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: {{primary}}; color: var(--inv); font-size: 10px; font-weight: 600; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px var(--bg)">{{cart}}</span>
+</sc-if>
+</button>
+</div>
+</div>
+</header>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 0 24px 64px">
+
+<!-- UBreadcrumb -->
+<nav aria-label="Breadcrumb" style="padding-top: 24px">
+<ol style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 14px">
+<li><a href="#" class="ui-focus" style="text-decoration: none; font-weight: 500">Home</a></li>
+<li aria-hidden="true" style="display: flex; color: var(--dim)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li><a href="#" class="ui-focus" style="text-decoration: none; font-weight: 500">Products</a></li>
+<li aria-hidden="true" style="display: flex; color: var(--dim)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li aria-current="page" style="font-weight: 600; color: {{primary}}">{{catLabel}}</li>
+</ol>
+</nav>
+
+<!-- UPageHeader -->
+<div style="padding: 24px 0 32px; border-bottom: 1px solid var(--bd)">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+<h1 style="margin: 0; font-size: 36px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; color: var(--hi)">{{catLabel}}</h1>
+<span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; background: var(--soft); box-shadow: inset 0 0 0 1px var(--bda); font-size: 14px; font-weight: 500; color: var(--txt)">{{catTotal}} products</span>
+</div>
+<p style="margin: 12px 0 0; max-width: 720px; font-size: 18px; color: var(--mut)">{{catDesc}}</p>
+
+<!-- UButtonGroup: UInput (xl) + UDropdownMenu (search scope) -->
+<div style="position: relative; margin-top: 24px; max-width: 760px">
+<div style="display: flex; align-items: stretch">
+<div style="position: relative; flex: 1; min-width: 0">
+<label for="search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search products</label>
+<span aria-hidden="true" style="position: absolute; z-index: 2; left: 12px; top: 50%; transform: translateY(-50%); display: flex; color: var(--dim); pointer-events: none">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+</span>
+<input id="search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="{{sgExpanded}}" aria-controls="search-suggestions" aria-activedescendant="{{sgActiveId}}" value="{{q}}" onChange="{{onQ}}" onFocus="{{onQFocus}}" onKeyDown="{{onQKey}}" placeholder="{{searchPlaceholder}}" autocomplete="off" class="ui-input" style="position: relative; z-index: 1; width: 100%; height: 44px; padding: 8px 44px 8px 40px; border: 0; border-radius: 6px 0 0 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 16px; color: var(--hi)">
+<sc-if value="{{loadingQ}}" hint-placeholder-val="{{ false }}">
+<span role="status" aria-label="Loading results" style="position: absolute; z-index: 2; right: 14px; top: 50%; margin-top: -8px; display: flex; color: var(--dim); pointer-events: none">
+<svg class="ui-spin" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+</span>
+</sc-if>
+<sc-if value="{{showClear}}" hint-placeholder-val="{{ false }}">
+<button type="button" aria-label="Clear search" onClick="{{clearQ}}" class="ui-ghost ui-focus" style="position: absolute; z-index: 2; right: 6px; top: 50%; transform: translateY(-50%); display: flex; padding: 6px; border: 0; border-radius: 6px; background: transparent; color: var(--mut); cursor: pointer">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+</button>
+</sc-if>
+</div>
+<button type="button" aria-haspopup="menu" aria-expanded="{{scopeExpanded}}" aria-controls="scope-menu" onClick="{{toggleScope}}" class="ui-outline ui-focus" style="display: inline-flex; align-items: center; gap: 6px; margin-left: -1px; padding: 0 12px; border: 0; border-radius: 0 6px 6px 0; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); color: var(--txt); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M7 12h10"></path><path d="M10 18h4"></path></svg>
+<span style="color: var(--mut)">In:</span>
+<span>{{scopeLabel}}</span>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dim); transform: rotate({{scopeChevron}}deg)"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+</div>
+<sc-if value="{{scopeOpen}}" hint-placeholder-val="{{ false }}">
+<button type="button" aria-label="Close menu" onClick="{{closeScope}}" style="position: fixed; inset: 0; z-index: 30; border: 0; background: transparent; cursor: default"></button>
+<div id="scope-menu" role="menu" aria-label="Search in" style="position: absolute; right: 0; top: calc(100% + 6px); z-index: 31; width: 240px; padding: 4px; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bd), 0 10px 15px -3px rgba(0,0,0,0.12), 0 4px 6px -4px rgba(0,0,0,0.12)">
+<div style="padding: 6px 8px; font-size: 12px; font-weight: 600; color: var(--hi)">Search in</div>
+<sc-for list="{{scopeItems}}" as="si" hint-placeholder-count="3">
+<button type="button" role="menuitemcheckbox" aria-checked="{{si.checked}}" onClick="{{si.toggle}}" class="ui-ghost ui-focus" style="display: flex; width: 100%; align-items: center; gap: 8px; padding: 6px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--txt); font: inherit; font-size: 14px; text-align: left; cursor: pointer; opacity: {{si.op}}">
+<span style="flex: 1">{{si.label}}</span>
+<sc-if value="{{si.on}}" hint-placeholder-val="{{ true }}">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--p)"><path d="M20 6 9 17l-5-5"></path></svg>
+</sc-if>
+</button>
+</sc-for>
+<div aria-hidden="true" style="height: 1px; margin: 4px 0; background: var(--bd)"></div>
+<button type="button" role="menuitem" onClick="{{scopeAll}}" class="ui-ghost ui-focus" style="display: flex; width: 100%; padding: 6px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--txt); font: inherit; font-size: 14px; text-align: left; cursor: pointer">All fields</button>
+</div>
+</sc-if>
+<!-- Suggestions: UInputMenu / UCommandPalette-style listbox -->
+<sc-if value="{{sgOpen}}" hint-placeholder-val="{{ false }}">
+<button type="button" aria-label="Close suggestions" onClick="{{closeSg}}" style="position: fixed; inset: 0; z-index: 30; border: 0; background: transparent; cursor: default"></button>
+<div style="position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 31; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bd), 0 10px 15px -3px rgba(0,0,0,0.12), 0 4px 6px -4px rgba(0,0,0,0.12); overflow: hidden">
+<div id="search-suggestions" role="listbox" aria-label="Search suggestions" aria-busy="{{sgBusy}}" style="max-height: 420px; overflow-y: auto; padding: 4px">
+<sc-if value="{{sgLoading}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 8px; padding: 8px 8px 4px; font-size: 12px; font-weight: 600; color: var(--mut)">
+<svg class="ui-spin" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+<span>Searching…</span>
+</div>
+<sc-for list="{{skel4}}" as="k" hint-placeholder-count="4">
+<div aria-hidden="true" style="display: flex; align-items: center; gap: 10px; padding: 8px">
+<div class="ui-skel" style="flex: none; width: 32px; height: 32px"></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+<div class="ui-skel" style="height: 12px; width: {{k.w1}}%"></div>
+<div class="ui-skel" style="height: 10px; width: {{k.w2}}%"></div>
+</div>
+<div class="ui-skel" style="flex: none; width: 56px; height: 12px"></div>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{sgReady}}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{sgGroups}}" as="g" hint-placeholder-count="2">
+<div role="group" aria-labelledby="{{g.id}}">
+<div id="{{g.id}}" style="padding: 8px 8px 4px; font-size: 12px; font-weight: 600; color: var(--mut)">{{g.label}}</div>
+<sc-for list="{{g.items}}" as="it" hint-placeholder-count="3">
+<button type="button" id="{{it.id}}" role="option" aria-selected="{{it.selected}}" onClick="{{it.pick}}" onMouseEnter="{{it.hover}}" style="display: flex; width: 100%; align-items: center; gap: 10px; padding: 8px; border: 0; border-radius: 4px; background: {{it.bg}}; color: var(--txt); font: inherit; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; border-radius: 6px; background: var(--elev); color: var(--mut)">
+<sc-if value="{{it.isP}}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></sc-if>
+<sc-if value="{{it.isB}}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7-3 5h4l-3 5"></path><path d="M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935"></path><path d="M22 14v-4"></path><path d="M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936"></path></svg></sc-if>
+<sc-if value="{{it.isC}}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg></sc-if>
+<sc-if value="{{it.isM}}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg></sc-if>
+<sc-if value="{{it.isCat}}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg></sc-if>
+</span>
+<span style="flex: 1; min-width: 0">
+<span style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--txt)"><sc-for list="{{it.parts}}" as="pt" hint-placeholder-count="1"><span style="font-weight: {{pt.fw}}; color: {{pt.c}}">{{pt.t}}</span></sc-for></span>
+<span style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--mut)">{{it.meta}}</span>
+</span>
+<sc-if value="{{it.hasPrice}}" hint-placeholder-val="{{ true }}">
+<span style="flex: none; font-size: 14px; font-weight: 600; color: var(--hi)">{{it.price}}</span>
+</sc-if>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{sgEmpty}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 24px 12px; text-align: center; font-size: 14px; color: var(--mut)">No suggestions for “{{sgQuery}}”</div>
+</sc-if>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 12px; border-top: 1px solid var(--bd); background: var(--soft); font-size: 12px; color: var(--mut)">
+<span style="display: inline-flex; align-items: center; gap: 4px"><kbd style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 4px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 11px; font-weight: 500; color: var(--hi)">↑</kbd><kbd style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 4px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 11px; font-weight: 500; color: var(--hi)">↓</kbd> navigate</span>
+<span style="display: inline-flex; align-items: center; gap: 4px"><kbd style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 4px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 11px; font-weight: 500; color: var(--hi)">Enter</kbd> select</span>
+<span style="display: inline-flex; align-items: center; gap: 4px"><kbd style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 4px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 11px; font-weight: 500; color: var(--hi)">Esc</kbd> close</span>
+<span style="margin-left: auto">{{sgCountText}}</span>
+</div>
+</div>
+</sc-if>
+</div>
+
+<!-- UTabs (pill) — category -->
+<div style="margin-top: 20px; overflow-x: auto">
+<div role="group" aria-label="Category" style="display: inline-flex; gap: 4px; padding: 4px; border-radius: 8px; background: var(--elev)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" class="ui-focus" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 6px; background: {{t.bg}}; color: {{t.fg}}; font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer">
+<sc-if value="{{t.isAll}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg></sc-if>
+<sc-if value="{{t.isP}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></sc-if>
+<sc-if value="{{t.isB}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7-3 5h4l-3 5"></path><path d="M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935"></path><path d="M22 14v-4"></path><path d="M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936"></path></svg></sc-if>
+<sc-if value="{{t.isC}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg></sc-if>
+<span>{{t.label}}</span>
+<span style="padding: 0 6px; border-radius: 4px; background: {{t.cbg}}; color: {{t.cfg}}; font-size: 12px; font-weight: 500">{{t.count}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+
+<!-- Layout: aside + results -->
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px; padding-top: 32px">
+
+<!-- UPageAside: filters -->
+<sc-if value="{{filtersOpen}}" hint-placeholder-val="{{ false }}">
+<button type="button" aria-label="Close filters" tabindex="-1" onClick="{{closeFilters}}" class="m-backdrop" style="position: fixed; inset: 0; z-index: 49; border: 0; background: rgba(15,23,42,0.55); cursor: default"></button>
+</sc-if>
+<!-- On desktop: UPageAside. Below 1024px: USlideover (modal dialog) -->
+<aside id="filters-panel" aria-label="Filters" role="{{asideRole}}" aria-modal="{{ariaModal}}" onKeyDown="{{asideKey}}" class="filters {{filtersCls}}" style="flex: 1 1 248px; max-width: 100%; min-width: 0; display: flex; flex-direction: column">
+<div class="f-head-m" style="display: none; align-items: center; justify-content: space-between; gap: 8px; padding: 16px; border-bottom: 1px solid var(--bd)">
+<h2 id="filters-title" style="margin: 0; font-size: 18px; font-weight: 600; color: var(--hi)">Filters</h2>
+<button id="filters-close" type="button" aria-label="Close filters" onClick="{{closeFilters}}" class="ui-ghost ui-focus" style="display: flex; padding: 6px; border: 0; border-radius: 6px; background: transparent; color: var(--mut); cursor: pointer">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+</button>
+</div>
+<div class="f-body" style="display: flex; flex-direction: column; gap: 24px">
+<div class="d-only" style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: var(--hi)">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"></path></svg>
+Filters
+</h2>
+<sc-if value="{{hasChips}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{clearAll}}" class="ui-link ui-focus" style="padding: 0; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: var(--mut); cursor: pointer">Reset</button>
+</sc-if>
+</div>
+
+<!-- Manufacturer -->
+<fieldset style="margin: 0; padding: 0; border: 0; min-width: 0">
+<legend style="padding: 0; margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--hi)">Manufacturer</legend>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{mfrShown}}" as="m" hint-placeholder-count="8">
+<label for="{{m.id}}" style="display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 14px; color: var(--txt); cursor: pointer; opacity: {{m.op}}">
+<input id="{{m.id}}" type="checkbox" class="ui-check" checked="{{m.checked}}" disabled="{{m.disabled}}" onChange="{{m.toggle}}">
+<span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{m.name}}</span>
+<span style="font-size: 12px; color: var(--mut)">{{m.count}}</span>
+</label>
+</sc-for>
+</div>
+<sc-if value="{{mfrHasMore}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{toggleMfrMore}}" class="ui-link ui-focus" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 0; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: {{primary}}; cursor: pointer">
+<span>{{mfrMoreLabel}}</span>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate({{mfrChevron}}deg)"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+</sc-if>
+</fieldset>
+
+<div aria-hidden="true" style="height: 1px; background: var(--bd)"></div>
+
+<!-- Price — USlider (range) + inputs -->
+<fieldset style="margin: 0; padding: 0; border: 0; min-width: 0">
+<legend style="padding: 0; margin-bottom: 14px; font-size: 14px; font-weight: 600; color: var(--hi)">Price (EUR, excl. VAT)</legend>
+<div style="position: relative; height: 20px">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 7px; height: 6px; border-radius: 999px; background: var(--acc)"></div>
+<div aria-hidden="true" style="position: absolute; top: 7px; height: 6px; border-radius: 999px; background: {{primary}}; left: {{price.left}}%; right: {{price.right}}%"></div>
+<input type="range" class="rng" aria-label="Minimum price" min="{{price.b0}}" max="{{price.b1}}" step="1" value="{{price.lo}}" onChange="{{price.slideLo}}">
+<input type="range" class="rng" aria-label="Maximum price" min="{{price.b0}}" max="{{price.b1}}" step="1" value="{{price.hi}}" onChange="{{price.slideHi}}">
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px">
+<div>
+<label for="price-min" style="display: block; margin-bottom: 4px; font-size: 12px; font-weight: 500; color: var(--mut)">Min</label>
+<input id="price-min" type="number" inputmode="decimal" min="{{price.b0}}" max="{{price.b1}}" value="{{price.rawLo}}" onChange="{{price.typeLo}}" onBlur="{{price.norm}}" class="ui-input" style="width: 100%; padding: 6px 10px; border: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 14px; color: var(--hi); background: var(--bg)">
+</div>
+<div>
+<label for="price-max" style="display: block; margin-bottom: 4px; font-size: 12px; font-weight: 500; color: var(--mut)">Max</label>
+<input id="price-max" type="number" inputmode="decimal" min="{{price.b0}}" max="{{price.b1}}" value="{{price.rawHi}}" onChange="{{price.typeHi}}" onBlur="{{price.norm}}" class="ui-input" style="width: 100%; padding: 6px 10px; border: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 14px; color: var(--hi); background: var(--bg)">
+</div>
+</div>
+</fieldset>
+
+<div aria-hidden="true" style="height: 1px; background: var(--bd)"></div>
+
+<!-- Power / capacity -->
+<sc-if value="{{hasSpec}}" hint-placeholder-val="{{ false }}">
+<fieldset style="margin: 0; padding: 0; border: 0; min-width: 0">
+<legend style="padding: 0; margin-bottom: 14px; font-size: 14px; font-weight: 600; color: var(--hi)">{{specTitle}}</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px">
+<sc-for list="{{presets}}" as="ps" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{ps.pressed}}" onClick="{{ps.pick}}" class="ui-focus" style="padding: 4px 10px; border: 0; border-radius: 6px; background: {{ps.bg}}; box-shadow: inset 0 0 0 1px {{ps.ring}}; color: {{ps.fg}}; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer">{{ps.label}}</button>
+</sc-for>
+</div>
+<div style="position: relative; height: 20px">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 7px; height: 6px; border-radius: 999px; background: var(--acc)"></div>
+<div aria-hidden="true" style="position: absolute; top: 7px; height: 6px; border-radius: 999px; background: {{primary}}; left: {{spec.left}}%; right: {{spec.right}}%"></div>
+<input type="range" class="rng" aria-label="Minimum {{specName}}" min="{{spec.b0}}" max="{{spec.b1}}" step="{{spec.step}}" value="{{spec.lo}}" onChange="{{spec.slideLo}}">
+<input type="range" class="rng" aria-label="Maximum {{specName}}" min="{{spec.b0}}" max="{{spec.b1}}" step="{{spec.step}}" value="{{spec.hi}}" onChange="{{spec.slideHi}}">
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px">
+<div>
+<label for="spec-min" style="display: block; margin-bottom: 4px; font-size: 12px; font-weight: 500; color: var(--mut)">Min ({{specUnit}})</label>
+<input id="spec-min" type="number" inputmode="decimal" step="{{spec.step}}" min="{{spec.b0}}" max="{{spec.b1}}" value="{{spec.rawLo}}" onChange="{{spec.typeLo}}" onBlur="{{spec.norm}}" class="ui-input" style="width: 100%; padding: 6px 10px; border: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 14px; color: var(--hi); background: var(--bg)">
+</div>
+<div>
+<label for="spec-max" style="display: block; margin-bottom: 4px; font-size: 12px; font-weight: 500; color: var(--mut)">Max ({{specUnit}})</label>
+<input id="spec-max" type="number" inputmode="decimal" step="{{spec.step}}" min="{{spec.b0}}" max="{{spec.b1}}" value="{{spec.rawHi}}" onChange="{{spec.typeHi}}" onBlur="{{spec.norm}}" class="ui-input" style="width: 100%; padding: 6px 10px; border: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 14px; color: var(--hi); background: var(--bg)">
+</div>
+</div>
+</fieldset>
+</sc-if>
+<sc-if value="{{noSpec}}" hint-placeholder-val="{{ true }}">
+<!-- UAlert (subtle, neutral) -->
+<div role="note" style="display: flex; gap: 10px; padding: 12px; border-radius: 8px; background: var(--soft); box-shadow: inset 0 0 0 1px var(--bd)">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--mut); flex: none; margin-top: 1px"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+<div style="font-size: 14px">
+<div style="font-weight: 500; color: var(--hi)">Power &amp; capacity</div>
+<div style="margin-top: 2px; color: var(--mut)">Pick a category to filter and sort by power (W) or capacity (kWh).</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px">
+<button type="button" onClick="{{goPanels}}" class="ui-outline ui-focus" style="padding: 4px 10px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 12px; font-weight: 500; color: var(--txt); cursor: pointer">Solar panels · W</button>
+<button type="button" onClick="{{goBatteries}}" class="ui-outline ui-focus" style="padding: 4px 10px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 12px; font-weight: 500; color: var(--txt); cursor: pointer">Batteries · kWh</button>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+<div class="f-foot-m" style="display: none; gap: 8px; padding: 16px; border-top: 1px solid var(--bd)">
+<button type="button" onClick="{{clearAll}}" class="ui-outline ui-focus" style="flex: 1; padding: 10px 12px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); color: var(--txt); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer">Clear all</button>
+<button type="button" onClick="{{closeFilters}}" class="ui-solid ui-focus" style="flex: 2; padding: 10px 12px; border: 0; border-radius: 6px; background: {{primary}}; color: var(--inv); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer">{{showNLabel}}</button>
+</div>
+</aside>
+
+<!-- Results -->
+<section aria-label="Products" aria-busy="{{busy}}" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<!-- Toolbar -->
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<p role="status" style="margin: 0; font-size: 14px; color: var(--mut)">{{statusText}}</p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<button id="filters-trigger" type="button" aria-haspopup="dialog" aria-expanded="{{filtersExpanded}}" aria-controls="filters-panel" onClick="{{openFilters}}" class="m-only ui-outline ui-focus" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); color: var(--txt); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"></path></svg>
+<span>Filters</span>
+<sc-if value="{{hasActiveCount}}" hint-placeholder-val="{{ false }}">
+<span style="min-width: 20px; padding: 0 6px; border-radius: 999px; background: {{primary}}; color: var(--inv); font-size: 12px; font-weight: 600; line-height: 20px; text-align: center">{{activeCount}}</span>
+</sc-if>
+</button>
+<label for="sort" style="font-size: 14px; color: var(--mut)">Sort by</label>
+<div style="position: relative">
+<select id="sort" value="{{sort}}" onChange="{{onSort}}" class="ui-input" style="appearance: none; -webkit-appearance: none; min-width: 210px; padding: 6px 32px 6px 10px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 14px; color: var(--hi); cursor: pointer">
+<sc-for list="{{sortOpts}}" as="o" hint-placeholder-count="4">
+<option value="{{o.v}}">{{o.l}}</option>
+</sc-for>
+</select>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dim); position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none"><path d="m6 9 6 6 6-6"></path></svg>
+</div>
+<!-- UButtonGroup view toggle -->
+<div role="group" aria-label="View" style="display: inline-flex; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--bda); overflow: hidden">
+<button type="button" aria-label="Grid view" aria-pressed="{{isGrid}}" onClick="{{setGrid}}" class="ui-focus" style="display: flex; padding: 7px; border: 0; background: {{gridBg}}; color: {{gridFg}}; cursor: pointer">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
+</button>
+<button type="button" aria-label="Table view" aria-pressed="{{isTable}}" onClick="{{setTable}}" class="ui-focus" style="display: flex; padding: 7px; border: 0; border-left: 1px solid var(--bda); background: {{tableBg}}; color: {{tableFg}}; cursor: pointer">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"></path><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path></svg>
+</button>
+</div>
+</div>
+</div>
+
+<!-- Active filters: UBadge chips -->
+<sc-if value="{{hasChips}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="2">
+<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 8px; border-radius: 6px; background: var(--ps); box-shadow: inset 0 0 0 1px var(--pr); font-size: 12px; font-weight: 500; color: var(--hi)">
+<span style="color: var(--mut)">{{c.kind}}</span>
+<span>{{c.label}}</span>
+<button type="button" aria-label="Remove filter {{c.label}}" onClick="{{c.remove}}" class="ui-ghost ui-focus" style="display: flex; padding: 2px; border: 0; border-radius: 4px; background: transparent; color: var(--ton); cursor: pointer">
+<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+</button>
+</span>
+</sc-for>
+<button type="button" onClick="{{clearAll}}" class="ui-ghost ui-focus" style="padding: 2px 8px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: var(--ton); cursor: pointer">Clear all</button>
+</div>
+</sc-if>
+
+<!-- Empty state -->
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 64px 24px; border-radius: 8px; border: 1px dashed var(--bda); text-align: center">
+<span style="display: flex; padding: 12px; border-radius: 999px; background: var(--elev); color: var(--mut)">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+</span>
+<div style="font-size: 16px; font-weight: 600; color: var(--hi)">No products match your filters</div>
+<div style="max-width: 360px; font-size: 14px; color: var(--mut)">Try a different search term, widen the price range or remove some manufacturers.</div>
+<button type="button" onClick="{{clearAll}}" class="ui-solid ui-focus" style="margin-top: 4px; padding: 6px 12px; border: 0; border-radius: 6px; background: {{primary}}; color: var(--inv); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer">Clear all filters</button>
+</div>
+</sc-if>
+
+<!-- Loading: USkeleton -->
+<sc-if value="{{skelGrid}}" hint-placeholder-val="{{ false }}">
+<ul aria-hidden="true" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none">
+<sc-for list="{{skelCards}}" as="k" hint-placeholder-count="6">
+<li style="border-radius: 8px; box-shadow: inset 0 0 0 1px var(--bd); overflow: hidden">
+<div class="ui-skel" style="aspect-ratio: 4 / 3; border-radius: 0"></div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px">
+<div class="ui-skel" style="height: 10px; width: 40%"></div>
+<div class="ui-skel" style="height: 14px; width: {{k.w1}}%"></div>
+<div class="ui-skel" style="height: 10px; width: 100%"></div>
+<div class="ui-skel" style="height: 10px; width: {{k.w2}}%"></div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 16px 16px">
+<div class="ui-skel" style="height: 18px; width: 80px"></div>
+<div class="ui-skel" style="height: 32px; width: 64px"></div>
+</div>
+</li>
+</sc-for>
+</ul>
+</sc-if>
+<sc-if value="{{skelTable}}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="border-radius: 8px; box-shadow: inset 0 0 0 1px var(--bd); overflow: hidden">
+<sc-for list="{{skelCards}}" as="k" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 16px; padding: 16px; border-bottom: 1px solid var(--bd)">
+<div class="ui-skel" style="height: 12px; width: {{k.w1}}%"></div>
+<div class="ui-skel" style="height: 12px; width: 12%; margin-left: auto"></div>
+<div class="ui-skel" style="height: 28px; width: 56px"></div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<!-- Grid view: UCard -->
+<sc-if value="{{showGrid}}" hint-placeholder-val="{{ true }}">
+<ul style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none">
+<sc-for list="{{rows}}" as="p" hint-placeholder-count="12">
+<li id="{{p.slug}}" class="ui-card" style="display: flex; flex-direction: column; min-width: 0; border-radius: 8px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bd); overflow: hidden">
+<div style="position: relative; aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; background: var(--soft); border-bottom: 1px solid var(--bd); color: var(--dim)">
+<sc-if value="{{p.isP}}" hint-placeholder-val="{{ true }}"><svg aria-hidden="true" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></sc-if>
+<sc-if value="{{p.isB}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7-3 5h4l-3 5"></path><path d="M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935"></path><path d="M22 14v-4"></path><path d="M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936"></path></svg></sc-if>
+<sc-if value="{{p.isC}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg></sc-if>
+<span style="position: absolute; top: 10px; left: 10px; padding: 1px 6px; border-radius: 4px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bd); font-size: 12px; font-weight: 500; color: var(--ton)">{{p.catLabel}}</span>
+<sc-if value="{{p.hasSpec}}" hint-placeholder-val="{{ true }}">
+<span style="position: absolute; top: 10px; right: 10px; padding: 1px 6px; border-radius: 4px; background: var(--ps); box-shadow: inset 0 0 0 1px var(--pr); font-size: 12px; font-weight: 600; color: var(--hi)">{{p.specLabel}}</span>
+</sc-if>
+</div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 16px">
+<p style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; color: var(--mut)">{{p.mfr}}</p>
+<h3 style="margin: 0; font-size: 16px; line-height: 1.35; font-weight: 600; color: var(--hi)"><a href="#{{p.slug}}" class="ui-link ui-focus" style="color: inherit; text-decoration: none">{{p.name}}</a></h3>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--mut); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">{{p.desc}}</p>
+</div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 12px 16px 16px">
+<div style="min-width: 0">
+<div style="font-size: 18px; font-weight: 700; color: var(--hi)">{{p.priceLabel}}</div>
+<div style="font-size: 12px; color: var(--mut)">{{p.metaLabel}}</div>
+</div>
+<sc-if value="{{p.notAdded}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{p.add}}" aria-label="Add {{p.name}} to cart" class="ui-solid ui-focus" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 0; border-radius: 6px; background: {{primary}}; color: var(--inv); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+Add
+</button>
+</sc-if>
+<sc-if value="{{p.added}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{p.add}}" aria-label="Add another {{p.name}}" class="ui-focus" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 0; border-radius: 6px; background: var(--ps); box-shadow: inset 0 0 0 1px var(--pr); color: var(--hi); font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{primary}}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+{{p.qtyLabel}}
+</button>
+</sc-if>
+</div>
+</li>
+</sc-for>
+</ul>
+</sc-if>
+
+<!-- Table view: UTable -->
+<sc-if value="{{showTable}}" hint-placeholder-val="{{ false }}">
+<div style="overflow-x: auto; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--bd)">
+<div role="table" aria-label="Products" style="min-width: 820px; font-size: 14px">
+<div role="row" style="display: grid; grid-template-columns: minmax(260px, 3fr) 150px 100px 130px 120px 112px; align-items: center; background: var(--soft); border-bottom: 1px solid var(--bd)">
+<div role="columnheader" style="padding: 12px 16px; font-weight: 600; color: var(--hi)">Product</div>
+<div role="columnheader" style="padding: 12px 16px; font-weight: 600; color: var(--hi)">Category</div>
+<div role="columnheader" style="padding: 12px 16px; font-weight: 600; color: var(--hi)">{{specCol}}</div>
+<div role="columnheader" style="padding: 12px 16px; font-weight: 600; color: var(--hi)">Unit price</div>
+<div role="columnheader" style="padding: 12px 16px; font-weight: 600; color: var(--hi); text-align: right">Price</div>
+<div role="columnheader" style="padding: 12px 16px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Actions</span></div>
+</div>
+<sc-for list="{{rows}}" as="p" hint-placeholder-count="12">
+<div role="row" class="ui-row" style="display: grid; grid-template-columns: minmax(260px, 3fr) 150px 100px 130px 120px 112px; align-items: center; border-bottom: 1px solid var(--bd)">
+<div role="cell" style="padding: 12px 16px; min-width: 0">
+<a href="#{{p.slug}}" class="ui-link ui-focus" style="display: block; font-weight: 500; color: var(--hi); text-decoration: none">{{p.name}}</a>
+<div style="font-size: 12px; color: var(--mut)">{{p.mfr}}</div>
+</div>
+<div role="cell" style="padding: 12px 16px; color: var(--mut)">{{p.catLabel}}</div>
+<div role="cell" style="padding: 12px 16px; font-weight: 500; color: var(--hi)">{{p.specCell}}</div>
+<div role="cell" style="padding: 12px 16px; color: var(--mut)">{{p.unitCell}}</div>
+<div role="cell" style="padding: 12px 16px; font-weight: 600; color: var(--hi); text-align: right">{{p.priceLabel}}</div>
+<div role="cell" style="padding: 12px 16px; text-align: right">
+<sc-if value="{{p.notAdded}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{p.add}}" aria-label="Add {{p.name}} to cart" class="ui-solid ui-focus" style="padding: 4px 10px; border: 0; border-radius: 6px; background: {{primary}}; color: var(--inv); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer">Add</button>
+</sc-if>
+<sc-if value="{{p.added}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{p.add}}" aria-label="Add another {{p.name}}" class="ui-focus" style="padding: 4px 10px; border: 0; border-radius: 6px; background: var(--ps); box-shadow: inset 0 0 0 1px var(--pr); color: var(--hi); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer">{{p.qtyLabel}}</button>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<!-- Footer of list: per page + UPagination -->
+<sc-if value="{{hasResults}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px">
+<div style="display: flex; align-items: center; gap: 8px">
+<label for="per" style="font-size: 14px; color: var(--mut)">Per page</label>
+<div style="position: relative">
+<select id="per" value="{{per}}" onChange="{{onPer}}" class="ui-input" style="appearance: none; -webkit-appearance: none; padding: 4px 28px 4px 10px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); font: inherit; font-size: 14px; color: var(--hi); cursor: pointer">
+<option value="12">12</option>
+<option value="24">24</option>
+<option value="48">48</option>
+</select>
+<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dim); position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none"><path d="m6 9 6 6 6-6"></path></svg>
+</div>
+</div>
+<nav aria-label="Pagination" style="display: flex; align-items: center; gap: 4px">
+<button type="button" aria-label="Previous page" disabled="{{isFirst}}" onClick="{{prev}}" class="ui-outline ui-focus" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); color: var(--txt); cursor: pointer; opacity: {{prevOp}}">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+</button>
+<sc-for list="{{pageBtns}}" as="b" hint-placeholder-count="3">
+<sc-if value="{{b.isGap}}" hint-placeholder-val="{{ false }}">
+<span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; font-size: 14px; color: var(--mut)">…</span>
+</sc-if>
+<sc-if value="{{b.isPage}}" hint-placeholder-val="{{ true }}">
+<button type="button" aria-label="Page {{b.label}}" aria-current="{{b.current}}" onClick="{{b.go}}" class="ui-focus" style="min-width: 32px; height: 32px; padding: 0 8px; border: 0; border-radius: 6px; background: {{b.bg}}; box-shadow: inset 0 0 0 1px {{b.ring}}; color: {{b.fg}}; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer">{{b.label}}</button>
+</sc-if>
+</sc-for>
+<button type="button" aria-label="Next page" disabled="{{isLast}}" onClick="{{next}}" class="ui-outline ui-focus" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--bda); color: var(--txt); cursor: pointer; opacity: {{nextOp}}">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+</button>
+</nav>
+</div>
+</sc-if>
+</section>
+</div>
+</main>
+
+<footer style="border-top: 1px solid var(--bd)">
+<div style="max-width: 1280px; margin: 0 auto; padding: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--mut)">
+<span>© 2026 [YOUR BRAND]</span>
+<span>All prices in EUR, excluding VAT. Product images are placeholders.</span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"primary":{"editor":"color","default":"#22c55e","options":["#22c55e","#16a34a","#15803d","#3b82f6"]},"$preview":{"width":1440,"height":2400}}'>
+const RAW = [["EcoCharge HomeVault 10","EcoCharge",1499,"b","The HomeVault 10 is a 10kWh LiFePO4 battery designed for whole-home backup. It features an advanced Battery Management System (BMS) for optimal safety and a 6,000 cycle life."],["Quantum EnergyBank 5","Quantum Energy",750,"b","Store your solar energy with the Quantum EnergyBank 5. This 5kWh unit uses safe LiFePO4 technology for reliable, long-lasting performance. Perfect for self-consumption and peak shaving."],["AuraPower Reserve 15","AuraPower",1999,"b","Achieve energy independence with the AuraPower Reserve 15, a scalable 15kWh storage solution. Its modular, stackable design allows for easy installation and future expansion."],["VoltStorage Core 2.5","VoltStorage",299.99,"b","The VoltStorage Core 2.5 is a compact 2.5kWh LFP battery. It's an ideal entry-point for solar storage, helping you optimize self-consumption and reduce your electricity bills."],["AmpereDrive Titan 12","AmpereDrive",1750,"b","This 12kWh Lithium-Ion (NMC) battery is built for high-power applications. It offers excellent power density and round-trip efficiency, perfect for off-grid homes requiring large loads."],["PowerFlow Stack 7.5","PowerFlow",1100,"b","The PowerFlow Stack 7.5 is a 7.5kWh modular LFP battery. You can stack up to four units for a total of 30kWh, making it a flexible solution for growing energy needs."],["GridCore WallMount 8","GridCore",1250,"b","This 8kWh LiFePO4 battery features a slim, wall-mountable design. It integrates seamlessly into your home and provides reliable backup power during grid outages."],["ElementVolt LFP 14","ElementVolt",1900,"b","The ElementVolt LFP 14 is a high-capacity 14kWh battery. It uses cobalt-free LiFePO4 chemistry, offering superior safety, thermal stability, and an exceptionally long lifespan."],["ZenithStorage Z-Bank 4","ZenithStorage",600,"b","A 4kWh LFP battery module that is rack-mountable for easy installation. It's a scalable solution, perfect for building custom-sized battery banks for off-grid or commercial use."],["TerraCharge HomeBase 10","TerraCharge",1550,"b","The 10kWh TerraCharge HomeBase provides dependable energy storage. Its integrated smart BMS communicates directly with leading inverters for optimized charging and discharging cycles."],["EcoCharge HomeVault 13.5","EcoCharge",1850,"b","The 13.5kWh HomeVault is a high-capacity LiFePO4 battery. It's designed for full home backup, ensuring your lights and essential appliances stay on during any outage."],["Quantum EnergyBank 7","Quantum Energy",1050,"b","This 7kWh LiFePO4 battery offers a great balance of capacity and price. It's perfect for residential users looking to maximize their solar self-consumption."],["AuraPower Reserve 10","AuraPower",1450,"b","The AuraPower Reserve 10 is a 10kWh modular battery. Its sleek design and scalable architecture make it a popular choice for modern, energy-smart homes."],["VoltStorage Core 5","VoltStorage",760,"b","A 5kWh LFP battery that is simple to install and operate. The VoltStorage Core 5 is a robust, no-fuss solution for adding energy storage to any solar PV system."],["AmpereDrive Titan 9","AmpereDrive",1300,"b","This 9kWh NMC battery delivers high power output in a compact form factor. It's ideal for homes with high peak energy demands, like those with EV chargers."],["PowerFlow Stack 3.5","PowerFlow",499,"b","The 3.5kWh PowerFlow Stack is the base module for their scalable system. Start with one and add more later as your energy storage requirements increase."],["GridCore WallMount 11","GridCore",1600,"b","This 11kWh wall-mounted LFP battery features an integrated DC disconnect. This simplifies installation and provides a clean, all-in-one look in your garage or utility room."],["ElementVolt LFP 6.5","ElementVolt",950,"b","A 6.5kWh LiFePO4 battery with a very high cycle life. It's engineered for durability and is an excellent choice for off-grid applications where reliability is paramount."],["ZenithStorage Z-Bank 2.4","ZenithStorage",350,"b","This 2.4kWh rack-mounted LFP module is a favorite for DIYers and system integrators. It offers robust performance and is easily paralleled for larger system builds."],["TerraCharge HomeBase 12","TerraCharge",1700,"b","The 12kWh TerraCharge HomeBase is a smart battery. It can be programmed for time-of-use arbitrage, charging from the grid when rates are low and powering your home when they are high."],["EcoCharge HomeVault 7.5","EcoCharge",1150,"b","A 7.5kWh LFP battery from the reliable HomeVault series. It's a mid-sized option perfect for many homes, providing both blackout protection and daily energy cycling."],["Quantum EnergyBank 10","Quantum Energy",1480,"b","The 10kWh EnergyBank is a complete home storage solution. It features a wide operating temperature range, making it suitable for installation in garages or sheds."],["AuraPower Reserve 5","AuraPower",770,"b","This 5kWh stackable module is the building block of the AuraPower system. Its simple plug-and-play connectivity makes installation fast and straightforward for certified installers."],["VoltStorage Core 8","VoltStorage",1200,"b","The 8kWh VoltStorage Core offers reliable LiFePO4 storage. It is designed for longevity, providing over 10 years of service under normal daily cycling conditions."],["AmpereDrive Titan 15","AmpereDrive",1999,"b","The 15kWh Titan is a high-capacity NMC battery for large homes. Its high discharge rate can power multiple heavy-duty appliances simultaneously during an outage."],["PowerFlow Stack 10.5","PowerFlow",1550,"b","This 10.5kWh battery system is comprised of three 3.5kWh modules. This modularity simplifies transportation and installation, allowing for a one-person setup."],["GridCore WallMount 4","GridCore",650,"b","A compact 4kWh wall-mounted LFP battery. It's the perfect size for apartments or small homes looking to offset evening energy consumption with stored solar power."],["ElementVolt LFP 9","ElementVolt",1320,"b","The 9kWh ElementVolt battery is built with prismatic LiFePO4 cells for maximum safety. It includes a smart BMS with Wi-Fi monitoring to track your energy usage."],["ZenithStorage Z-Bank 5","ZenithStorage",750,"b","A 5kWh 48V rack-mounted battery module. It's compatible with most 48V inverters, making it a flexible choice for new systems or battery replacements."],["TerraCharge HomeBase 6","TerraCharge",900,"b","The 6kWh TerraCharge HomeBase is a reliable LFP battery. It is designed to work seamlessly with solar, providing a clean energy solution day and night."],["EcoCharge HomeVault 5","EcoCharge",780,"b","The 5kWh HomeVault is the entry-level model in the series. It provides essential backup power and self-consumption capabilities in a compact, affordable LFP package."],["Quantum EnergyBank 14","Quantum Energy",1890,"b","This 14kWh high-capacity LFP battery is perfect for off-grid living. Its robust construction and safe chemistry provide peace of mind and long-lasting energy independence."],["AuraPower Reserve 7.5","AuraPower",1120,"b","The 7.5kWh AuraPower Reserve is a scalable LFP battery. Its elegant design looks great on the wall, and its modularity lets you add more capacity later."],["VoltStorage Core 10","VoltStorage",1450,"b","A 10kWh LiFePO4 battery that offers exceptional value. The VoltStorage Core 10 is built for durability, with a 10-year warranty and a maintenance-free design."],["AmpereDrive Titan 6","AmpereDrive",950,"b","This 6kWh NMC battery is optimized for power density. It's a great choice for hybrid systems where space is limited but high power output is required."],["PowerFlow Stack 14","PowerFlow",1950,"b","A 14kWh system (four 3.5kWh modules). This high-capacity LFP solution is ideal for large homes or small businesses looking to reduce demand charges."],["GridCore WallMount 13","GridCore",1800,"b","The 13kWh GridCore WallMount is a high-performance LFP battery. It provides a high continuous discharge rate, suitable for powering air conditioners and well pumps."],["ElementVolt LFP 4.5","ElementVolt",699,"b","This 4.5kWh LFP battery is engineered for safety and reliability. It's a perfect match for smaller solar arrays, helping to store excess energy for use at night."],["ZenithStorage Z-Bank 3.5","ZenithStorage",480,"b","A 3.5kWh 48V rack battery module. These are easy to parallel, allowing for highly customized battery bank sizes to perfectly match your inverter and load profile."],["TerraCharge HomeBase 8","TerraCharge",1220,"b","The 8kWh TerraCharge HomeBase is a smart LFP battery. It integrates with smart home platforms, allowing you to optimize your energy storage around your daily routines."],["EcoCharge HomeVault 12","EcoCharge",1720,"b","This 12kWh LFP battery provides reliable backup for most of your home. It features a high round-trip efficiency, ensuring more of your stored solar energy is available for use."],["Quantum EnergyBank 3","Quantum Energy",450,"b","An entry-level 3kWh LFP battery for load shifting. It's an affordable way to start with energy storage and reduce your reliance on the grid during peak hours."],["AuraPower Reserve 12.5","AuraPower",1799,"b","A 12.5kWh (five 2.5kWh modules) stackable LFP system. The AuraPower Reserve's modular design makes it easy to install without heavy lifting equipment."],["VoltStorage Core 6.5","VoltStorage",975,"b","The 6.5kWh VoltStorage Core is a dependable LFP battery. It's designed for simple integration with grid-tied or hybrid inverters, providing a reliable storage solution."],["AmpereDrive Titan 10","AmpereDrive",1500,"b","This 10kWh NMC battery is a high-performance unit. Its chemistry allows for fast charging and discharging, making it ideal for capturing maximum solar energy."],["PowerFlow Stack 7","PowerFlow",1080,"b","A 7kWh (two 3.5kWh modules) LFP battery system. This mid-sized solution is perfect for a typical family home, providing overnight power and backup."],["GridCore WallMount 9","GridCore",1350,"b","The 9kWh GridCore LFP battery features a sleek, integrated design. Its wall-mounting bracket is included, making for a clean and professional-looking installation."],["ElementVolt LFP 11","ElementVolt",1620,"b","A robust 11kWh LiFePO4 battery built for longevity. It's an ideal storage solution for off-grid cabins or homes that experience frequent, extended power outages."],["ZenithStorage Z-Bank 4.8","ZenithStorage",720,"b","This 4.8kWh 48V rack battery is a top-seller. Its high-quality LFP cells and smart BMS ensure reliable performance and compatibility with a wide range of inverters."],["TerraCharge HomeBase 14","TerraCharge",1950,"b","The 14kWh TerraCharge HomeBase is a premium LFP storage solution. It offers deep cycling capabilities and a sophisticated thermal management system for a long, reliable service life."],["SafeLock Pro Pair M/F","SafeLock",7.99,"c","This MC4-compatible connector pair (Male/Female) ensures a secure, IP67 waterproof connection for 10 or 12 AWG solar cable. Made from durable PPO material for long-term outdoor use."],["PV-Link T-Branch 2-1","PV-Link",18.5,"c","This T-Branch connector (1 Male to 2 Female) allows for easy parallel wiring of solar panels. It features a quick snap-in locking mechanism and is IP67 rated."],["AmpJoin Y-Splitter Set","AmpJoin",21.99,"c","A 1-to-2 Y-branch connector set (M/FF and F/MM) for efficient parallel string connections. These connectors are TUV certified and built for low-resistance, safe power transmission."],["SolarSnap H4 Pair","SolarSnap",9.95,"c","Industry standard Amphenol H4 connector pair. These are known for their robust design, low contact resistance, and excellent durability in all weather conditions."],["QuickLink MC3 Set (10-pack)","QuickLink",35,"c","A bulk pack of 10 pairs of older generation MC3 connectors. These are perfect for repair or maintenance on legacy solar installations that do not use the MC4 standard."],["SafeLock Inline Fuse 15A","SafeLock",14.99,"c","This MC4-compatible inline fuse holder comes with a 15A fuse. It provides essential overcurrent protection for your solar strings, preventing damage and ensuring system safety."],["PV-Link 4-to-1 Combiner","PV-Link",32,"c","This 4-string parallel combiner connector simplifies wiring. It takes four inputs and combines them into one output, all within a single IP68 waterproof housing."],["AmpJoin Bulkhead M/F Pair","AmpJoin",12.5,"c","A panel-mount MC4 connector pair (Male/Female). These are designed to be mounted on the wall of a combiner box or inverter, providing a clean, waterproof pass-through."],["HelioConnect Evo 2 Pair","HelioConnect",10.5,"c","The next generation MC4-Evo 2 connector pair. These are certified for 1500V systems, offering higher performance and suitability for modern, high-voltage solar arrays."],["JunctionX Diode Connector","JunctionX",16,"c","An MC4-compatible connector with an integrated bypass diode (15A). This is useful for preventing reverse current flow in shaded panels or custom parallel configurations."],["SafeLock Pro Pair (10-pack)","SafeLock",49.99,"c","A bulk pack of 10 pairs of SafeLock Pro MC4 connectors. This is an economical choice for professional installers, ensuring you have quality connectors ready for the job."],["PV-Link T-Branch 3-1","PV-Link",24,"c","This 1-to-3 T-Branch connector (1 Male to 3 Female) is perfect for combining three solar panels in parallel. It maintains an IP67 rating for durable outdoor use."],["AmpJoin Y-Splitter (Long)","AmpJoin",25,"c","A 1-to-2 Y-branch connector set with 1-foot extension cables. This provides extra flexibility when wiring panels that are spaced further apart on the racking."],["SolarSnap H4 Tool Kit","SolarSnap",45,"c","A complete crimping and assembly tool kit for Amphenol H4 connectors. This ensures you get perfect, reliable crimps every time for a safe and secure connection."],["QuickLink MC4 Wrench Set","QuickLink",8.99,"c","A pair of lightweight plastic wrenches designed specifically for tightening and loosening MC4 connectors. A must-have tool for any solar installer to prevent under-tightening."],["SafeLock Inline Fuse 20A","SafeLock",15.5,"c","A 20A inline fuse holder with an MC4-compatible design. Use this to protect your strings from overcurrent, especially in systems with larger, high-power panels."],["PV-Link 2-to-1 Combiner","PV-Link",19,"c","A simple 2-string parallel combiner connector (MM/F). This is a clean and waterproof alternative to using a standard Y-splitter for combining two panel strings."],["AmpJoin Bulkhead Set (5-pack)","AmpJoin",40,"c","A 5-pack of panel-mount MC4 bulkhead connector pairs. Ideal for building custom combiner boxes or for inverter manufacturers needing reliable DC inputs."],["HelioConnect Evo 2 T-Branch","HelioConnect",22,"c","A T-branch connector designed for the 1500V MC4-Evo 2 standard. This is essential for high-voltage commercial and utility-scale solar projects."],["JunctionX End Cap (10-pack)","JunctionX",12.99,"c","A pack of 10 male and female MC4-compatible dust caps. These are crucial for safely covering and weatherproofing any unused connectors on your inverter or string."],["SafeLock Pro M/F 8AWG","SafeLock",9.5,"c","A heavy-duty MC4-compatible connector pair designed for larger 8 AWG solar cable. This is necessary for long cable runs or high-current strings to minimize voltage drop."],["PV-Link T-Branch 2-Way (M/F)","PV-Link",18.99,"c","A 2-input, 2-output T-branch connector. This is useful for creating complex parallel-series string configurations while maintaining a tidy and waterproof wiring setup."],["AmpJoin Y-Splitter 3-1","AmpJoin",28,"c","A 1-to-3 Y-branch connector set (M/FFF and F/MMM). This simplifies the wiring for combining three parallel strings into a single homerun."],["SolarSnap H4 Inline Fuse 30A","SolarSnap",19.99,"c","A 30A inline fuse holder using the Amphenol H4 connector standard. This provides robust string protection for systems built with H4 connectors."],["QuickLink MC4 Crimping Tool","QuickLink",34.99,"c","A high-precision ratchet crimping tool for MC4 metal pins. This tool ensures a gas-tight, reliable crimp that will last for the 25+ year life of the solar system."],["SafeLock Inline Fuse 10A","SafeLock",14.5,"c","A 10A inline fuse holder for MC4 connectors. This is a common size for protecting strings of smaller, lower-current solar panels from fault conditions."],["PV-Link 3-to-1 Combiner","PV-Link",28,"c","This 3-string parallel combiner connector (MMM/F) simplifies your wiring. Its IP68-rated housing ensures it can be installed anywhere on the roof or array."],["AmpJoin Bulkhead (Female only)","AmpJoin",6.99,"c","A single female panel-mount MC4 connector. This is useful for custom projects or repairs where only one side of the bulkhead connection is needed."],["HelioConnect Evo 2 Y-Branch","HelioConnect",25,"c","A Y-branch splitter set for 1500V MC4-Evo 2 connectors. This is the professional standard for parallel connections in high-voltage utility solar farms."],["JunctionX Disconnect Key Set","JunctionX",7.5,"c","A set of two MC3 disconnect tools. These are essential for safely unlocking and separating MC3 connectors without damaging the locking clips."],["SafeLock Pro Pair 10AWG (50-pack)","SafeLock",220,"c","A bulk box of 50 pairs of SafeLock Pro MC4 connectors. This is the most economical option for professional solar installers doing large residential or commercial jobs."],["PV-Link T-Branch 3-Way (M/F)","PV-Link",25,"c","A 3-input, 3-output T-branch connector. This advanced connector is designed for creating matrix-style parallel connections in large, complex solar arrays."],["AmpJoin Y-Splitter 4-1","AmpJoin",35,"c","A 1-to-4 Y-branch connector set. This allows you to combine four parallel strings into one, reducing the number of homerun cables needed to the combiner box."],["SolarSnap H4 T-Branch","SolarSnap",24,"c","A T-branch connector (1 Male to 2 Female) for systems using Amphenol H4 connectors. Ensures compatibility and a waterproof seal for parallel connections."],["QuickLink MC3 to MC4 Adapter","QuickLink",11.99,"c","A 1-foot adapter cable with an MC3 connector on one end and an MC4 on the other. This is essential for retrofitting new panels into an older, existing MC3-based system."],["SafeLock Inline Diode 15A","SafeLock",17,"c","A 15A inline blocking diode with MC4 connectors. This is used to prevent back-feeding in multi-string setups, especially with strings of different lengths or orientations."],["PV-Link 5-to-1 Combiner","PV-Link",42,"c","This 5-string parallel combiner connector simplifies wiring on large residential or small C&I projects. Its IP68 housing is built to last."],["AmpJoin Bulkhead (Male only)","AmpJoin",6.99,"c","A single male panel-mount MC4 connector. Perfect for custom-built power stations or combiner boxes where you need a secure, waterproof DC input point."],["HelioConnect Evo 2 Crimp Tool","HelioConnect",49.99,"c","A certified ratchet crimping tool specifically for MC4-Evo 2 connector pins. This is required to ensure proper, safe connections for 1500V systems."],["JunctionX Solar Label Kit","JunctionX",25,"c","A complete kit of UV-resistant, outdoor-rated warning labels ('PV SYSTEM', 'DC DISCONNECT', etc.). These are required by electrical code for a safe, compliant installation."],["SafeLock Pro Pair 12AWG (50-pack)","SafeLock",210,"c","A bulk box of 50 pairs of SafeLock Pro MC4 connectors optimized for 12 AWG cable. This is a standard size for most residential solar panel leads."],["PV-Link T-Branch 4-1","PV-Link",29.99,"c","A 1-to-4 T-branch connector (1 Male to 4 Female). This is a compact solution for paralleling four panels, reducing wiring clutter and installation time."],["AmpJoin Y-Splitter (Long 3ft)","AmpJoin",29,"c","A 1-to-2 Y-branch connector set with 3-foot extension cables. This is perfect for systems using microinverters or optimizers where connections are far apart."],["SolarSnap H4 Disconnect Tool","SolarSnap",9.99,"c","A specialized metal disconnect tool for Amphenol H4 connectors. This is much more durable than plastic tools and is required to unlock H4 connectors."],["QuickLink MC4 to SAE Adapter","QuickLink",14.99,"c","A 2-foot adapter cable with an MC4 pair on one end and a standard 2-pin SAE connector on the other. This is ideal for connecting solar panels to portable power stations."],["SafeLock Inline Fuse 25A","SafeLock",16.5,"c","A 25A inline fuse holder with MC4 connectors. This is used for protecting higher-current strings, often found in systems with bifacial or large-format panels."],["PV-Link 6-to-1 Combiner","PV-Link",49.5,"c","This 6-string parallel combiner connector is the largest in its class. It significantly simplifies homerun wiring for large residential rooftop arrays."],["AmpJoin Bulkhead Wrench","AmpJoin",10,"c","A specialized wrench for tightening the plastic nut on MC3 bulkhead connectors. This ensures a proper IP67 seal against the combiner box enclosure."],["HelioConnect Evo 2 Inline Fuse","HelioConnect",24.99,"c","A 20A inline fuse holder compatible with the 1500V MC4-Evo 2 standard. This is the correct choice for overcurrent protection in high-voltage strings."],["JunctionX MC4 Assembly Tool","JunctionX",15,"c","A 3-in-1 tool for MC4 connectors. It includes two disconnect keys for unlocking and two wrench heads for tightening the cable gland securely."],["Solarix Prime 450","Solarix",279.99,"p","This high-efficiency monocrystalline panel offers an impressive 450W output, making it ideal for residential rooftops. Features advanced PERC technology and a robust black aluminum frame for enhanced durability."],["RadiantEnergy X-Pro 550","RadiantEnergy",489.5,"p","Experience top-tier performance with the X-Pro 550, a 550W bifacial module. Its N-type TOPCon technology ensures excellent energy harvest even in low-light conditions. Backed by a 30-year performance warranty."],["QuantumCell Q.Peak 400","QuantumCell",225,"p","A cost-effective solution for large-scale commercial projects, the Q.Peak 400 provides 400W of reliable power. Built with high-density cell technology and a robust design to withstand harsh weather."],["FusionPV Flex 310","FusionPV",149.99,"p","This lightweight, flexible 310W panel is perfect for RVs, boats, and non-standard roof shapes. Its durable polymer construction resists salt mist and high winds, offering versatile installation options."],["ZenithSolar Vertex 600","ZenithSolar",499,"p","Maximize your power density with the ZenithSolar Vertex 600. This 600W panel uses large-format cells and half-cut technology to reduce internal losses and boost efficiency for utility-scale applications."],["SunVolt Guardian 380","SunVolt",199.99,"p","The SunVolt Guardian 380 is a reliable polycrystalline panel designed for budget-conscious installations. Its 380W output and proven performance make it a workhorse for grid-tied systems."],["TerraWatt Edge 430","TerraWatt",255.75,"p","This 430W monocrystalline panel features a sleek all-black design, perfect for homeowners who value aesthetics. It combines high efficiency with excellent temperature coefficients for great performance."],["HelioTek Bifacial 540","HelioTek",475,"p","The HelioTek Bifacial 540 captures sunlight from both sides, increasing total energy yield by up to 25%. This 540W module is ideal for ground-mount systems with reflective surfaces."],["Apex Solar Apex 410","Apex Solar",235.5,"p","A high-performance 410W monocrystalline panel from Apex Solar. It utilizes multi-busbar technology to improve reliability and efficiency, ensuring a long service life and stable output."],["NovaGrid PowerBlock 500","NovaGrid",410,"p","The NovaGrid PowerBlock 500 is engineered for commercial and industrial rooftops. This 500W panel offers a fantastic balance of power, size, and cost, optimizing your return on investment."],["Solarix Prime 440","Solarix",269.99,"p","This 440W monocrystalline panel is part of the flagship Prime series. It features anti-reflective coated glass and a reinforced frame, making it a durable choice for all climates."],["RadiantEnergy X-Pro 530","RadiantEnergy",465,"p","The X-Pro 530 is a high-output 530W bifacial module. Its advanced cell structure minimizes power degradation, ensuring a reliable and high-yield energy source for decades."],["QuantumCell Q.Peak 390","QuantumCell",215,"p","This 390W all-black monocrystalline panel provides excellent aesthetics for residential installations. Its high cell density and low-light performance guarantee strong energy production year-round."],["FusionPV Shingle 350","FusionPV",180,"p","The FusionPV Shingle 350 uses innovative overlapping cell technology to eliminate busbars. This 350W panel not only looks great but also performs exceptionally well in partial shade."],["ZenithSolar Vertex 580","ZenithSolar",480,"p","A utility-scale champion, the 580W Vertex panel from ZenithSolar is built for large projects. Its 210mm cells and high-efficiency design help reduce balance-of-system (BOS) costs."],["SunVolt Guardian 405","SunVolt",229.5,"p","The Guardian 405 is a robust 405W monocrystalline panel. It is certified to withstand high snow (5400 Pa) and wind (2400 Pa) loads, making it perfect for harsh environments."],["TerraWatt Edge 450","TerraWatt",275,"p","This 450W panel from TerraWatt is a reliable workhorse. It features half-cut cell technology to improve shade tolerance and reduce hotspots, ensuring system longevity and safety."],["HelioTek Mono 395","HelioTek",219.99,"p","A classic 395W monocrystalline panel with a silver frame. It offers solid efficiency and a proven track record, making it a safe and economical choice for standard installations."],["Apex Solar Apex 500","Apex Solar",405,"p","The Apex 500 is a high-power 500W module designed for C&I projects. Its large wafer size and 10-busbar design contribute to its high power density and reliability."],["NovaGrid PowerBlock 440","NovaGrid",260,"p","This 440W panel features a durable, corrosion-resistant frame and high-transparency glass. It's an excellent all-around performer for both rooftop and ground-mount solar arrays."],["Solarix Prime 460","Solarix",295,"p","The Solarix Prime 460 is a premium 460W monocrystalline panel. It boasts a low temperature coefficient, ensuring stable power output even on the hottest summer days."],["RadiantEnergy X-Pro 520","RadiantEnergy",450,"p","This 520W bifacial module is a powerhouse. Its transparent backsheet design allows it to capture reflected light, boosting overall energy production significantly in the right conditions."],["QuantumCell Q.Peak 415","QuantumCell",240,"p","The 415W Q.Peak panel from QuantumCell features advanced anti-LID and anti-PID technology. This ensures your system performs reliably and safely for its entire 25-year lifespan."],["FusionPV Flex 300","FusionPV",145,"p","An ultra-light 300W flexible panel perfect for marine applications. Its ETFE top layer is non-stick and self-cleaning, providing consistent performance with minimal maintenance."],["ZenithSolar Vertex 590","ZenithSolar",490,"p","This 590W high-capacity panel is designed to lower the LCOE for utility-scale projects. Its high module efficiency means fewer panels, less racking, and lower installation costs."],["SunVolt Guardian 370","SunVolt",190,"p","A dependable 370W polycrystalline panel that offers excellent value. Its robust build and proven field performance make it a popular choice for large, cost-sensitive projects."],["TerraWatt Edge 420","TerraWatt",245,"p","The TerraWatt Edge 420 is a 420W monocrystalline panel with a sleek black-on-black design. It provides excellent curb appeal without compromising on power or efficiency."],["HelioTek Bifacial 535","HelioTek",469,"p","Capture more energy with the 535W HelioTek Bifacial. This panel is perfect for carports, pergolas, and ground-mounts where light can be captured from the rear side."],["Apex Solar Apex 390","Apex Solar",210,"p","This 390W monocrystalline panel is a popular choice for residential systems. Its compact size and high efficiency make it a great fit for roofs with limited space."],["NovaGrid PowerBlock 480","NovaGrid",380,"p","The 480W PowerBlock panel is engineered for reliability. It features 9-busbar half-cut cells, which reduce resistive losses and enhance overall module efficiency significantly."],["Solarix Prime 435","Solarix",260,"p","A 435W monocrystalline panel from the Solarix Prime series. It offers a great balance of performance and price, backed by a solid 25-year linear power warranty."],["RadiantEnergy X-Pro 545","RadiantEnergy",480,"p","The 545W X-Pro bifacial module is a top-performer. Its N-type cells have virtually zero light-induced degradation (LID), ensuring more power over the system's lifetime."],["QuantumCell Q.Peak 385","QuantumCell",205,"p","This 385W panel offers excellent performance in low-light and high-temperature conditions. Its robust frame is certified for heavy snow loads, making it ideal for northern climates."],["FusionPV Shingle 360","FusionPV",189,"p","The 360W shingled panel from FusionPV provides a beautiful, seamless look. The overlapping cell design maximizes the active panel area for higher power density."],["ZenithSolar Vertex 570","ZenithSolar",470,"p","This 570W panel is a workhorse for solar farms. Its 1/3-cut cell design and multi-busbar technology ensure high reliability and power output for large-scale energy generation."],["SunVolt Guardian 410","SunVolt",235,"p","The 410W Guardian panel is a versatile monocrystalline module. It's suitable for everything from residential rooftops to large commercial systems, offering solid performance and value."],["TerraWatt Edge 400","TerraWatt",220,"p","A 400W all-black panel that combines aesthetics with performance. Its half-cut cell layout improves shade tolerance, making it a smart choice for roofs with obstructions."],["HelioTek Mono 450","HelioTek",280,"p","This 450W monocrystalline panel from HelioTek is a powerful and reliable option. It uses 182mm wafers to achieve higher efficiency and power output in a standard-sized frame."],["Apex Solar Apex 440","Apex Solar",265,"p","The Apex 440 combines 9-busbar and half-cut cell technologies. This 440W panel delivers excellent performance and reliability for any grid-tied solar project."],["NovaGrid PowerBlock 490","NovaGrid",399,"p","This 490W panel is designed for commercial and industrial applications. Its high power density helps to maximize the energy output from limited roof space."],["Solarix Prime 425","Solarix",250,"p","The 425W Solarix Prime is a high-efficiency monocrystalline panel. It's built to last, featuring a salt-mist and ammonia-resistant frame for coastal or agricultural areas."],["RadiantEnergy X-Pro 500","RadiantEnergy",420,"p","A 500W bifacial panel with a dual-glass design. This module offers extreme durability and fire safety, in addition to the extra energy yield from its bifacial cells."],["QuantumCell Q.Peak 405","QuantumCell",230,"p","This 405W panel is a residential favorite. Its Q.ANTUM cell technology ensures high performance, and its all-black design provides a sleek, modern look on any roof."],["FusionPV Flex 320","FusionPV",155,"p","The 320W flexible panel from FusionPV is incredibly lightweight at only 5 lbs. It's perfect for curved surfaces and mobile applications where traditional glass panels won't work."],["ZenithSolar Vertex 560","ZenithSolar",460,"p","This 560W panel is built on the 210mm large-wafer platform. It's optimized for utility-scale projects, delivering maximum power and reducing installation labor costs."],["SunVolt Guardian 390","SunVolt",212,"p","A 390W monocrystalline panel known for its reliability. The Guardian 390 has passed rigorous testing to ensure it performs optimally even in challenging weather conditions."],["TerraWatt Edge 415","TerraWatt",239,"p","The 415W TerraWatt Edge features a striking all-black design. Its half-cut cell technology not only boosts power but also makes the panel more resilient to micro-cracks."],["HelioTek Bifacial 525","HelioTek",460,"p","This 525W bifacial module features a robust dual-glass construction. It's designed for maximum lifetime yield, capturing ambient light from the rear to boost production."],["Apex Solar Apex 450","Apex Solar",279,"p","The 450W Apex panel is a powerful all-rounder. Its 9-busbar design reduces internal resistance, leading to higher efficiency and a lower cell operating temperature."],["NovaGrid PowerBlock 460","NovaGrid",350,"p","A 460W panel perfect for commercial rooftops. The PowerBlock 460 offers a high power-to-size ratio, allowing you to fit more solar capacity in a limited area."]];
+
+const FMT = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' });
+const FMT0 = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+const CAT = {
+  all: { label: 'All products', tab: 'All', desc: 'Solar panels, battery storage and connectors from leading manufacturers — net B2B prices for installers and distributors across Europe.' },
+  p: { label: 'Solar panels', tab: 'Solar panels', short: 'Solar panel', unit: 'W', spec: 'Power', step: 5, desc: 'Monocrystalline, bifacial, shingled and flexible PV modules from 300 W to 600 W for residential, C&I and utility-scale projects.' },
+  b: { label: 'Batteries', tab: 'Batteries', short: 'Battery', unit: 'kWh', spec: 'Capacity', step: 0.1, desc: 'LiFePO4 and NMC energy storage from 2.4 kWh to 15 kWh — wall-mounted, rack-mounted and stackable systems.' },
+  c: { label: 'Connectors & accessories', tab: 'Connectors & accessories', short: 'Accessory', desc: 'MC4, MC4-Evo 2 and H4 connectors, branch splitters, combiners, inline fuses and installation tools.' }
+};
+const PRESETS = {
+  p: [['Under 400 W', 300, 399], ['400–499 W', 400, 499], ['500 W and up', 500, 600]],
+  b: [['Up to 5 kWh', 2, 5], ['5.1–10 kWh', 5.1, 10], ['Over 10 kWh', 10.1, 15]]
+};
+const slugify = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const P = RAW.map((r, i) => {
+  const m = r[0].match(/(\d+(?:\.\d+)?)\s*$/);
+  const spec = r[3] !== 'c' && m ? parseFloat(m[1]) : null;
+  const unit = r[3] === 'p' ? 'W' : r[3] === 'b' ? 'kWh' : '';
+  const unitPrice = spec ? r[2] / spec : null;
+  const unitLabel = spec ? (r[3] === 'p' ? FMT.format(unitPrice) + ' / W' : FMT0.format(unitPrice) + ' / kWh') : '';
+  return {
+    id: i, name: r[0], mfr: r[1], price: r[2], cat: r[3], desc: r[4], spec: spec, unitPrice: unitPrice,
+    specLabel: spec ? spec + ' ' + unit : '', specCell: spec ? spec + ' ' + unit : '—',
+    unitCell: unitLabel || '—', priceLabel: FMT.format(r[2]),
+    metaLabel: unitLabel ? 'excl. VAT · ' + unitLabel : 'excl. VAT',
+    catLabel: CAT[r[3]].short, slug: 'p-' + slugify(r[0]),
+    nameL: r[0].toLowerCase(), mfrL: r[1].toLowerCase(), descL: r[4].toLowerCase(), hay: (r[0] + ' ' + r[1] + ' ' + r[4]).toLowerCase(),
+    isP: r[3] === 'p', isB: r[3] === 'b', isC: r[3] === 'c', hasSpec: !!spec
+  };
+});
+const BOUNDS = {};
+const MFRS = {};
+['all', 'p', 'b', 'c'].forEach((k) => {
+  const xs = P.filter((p) => k === 'all' || p.cat === k);
+  const prices = xs.map((p) => p.price);
+  const specs = xs.map((p) => p.spec).filter((v) => v != null);
+  BOUNDS[k] = {
+    price: [Math.floor(Math.min.apply(null, prices)), Math.ceil(Math.max.apply(null, prices))],
+    spec: specs.length ? [Math.floor(Math.min.apply(null, specs)), Math.ceil(Math.max.apply(null, specs))] : [0, 1]
+  };
+  MFRS[k] = Array.from(new Set(xs.map((p) => p.mfr))).sort((a, b) => a.localeCompare(b));
+});
+const num = (v, d) => (v === '' || v == null || isNaN(Number(v)) ? d : Number(v));
+const clamp = (v, b) => Math.min(b[1], Math.max(b[0], v));
+const eff = (r, b) => {
+  if (!r) return [b[0], b[1]];
+  let lo = num(r[0], b[0]);
+  let hi = num(r[1], b[1]);
+  if (lo > hi) { const t = lo; lo = hi; hi = t; }
+  return [clamp(lo, b), clamp(hi, b)];
+};
+const hexRgba = (hex, a) => {
+  const h = String(hex || '#22c55e').replace('#', '');
+  const f = h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6);
+  const n = parseInt(f, 16);
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+};
+const pageList = (cur, total) => {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out = [1];
+  const a = Math.max(2, cur - 1);
+  const b = Math.min(total - 1, cur + 1);
+  if (a > 2) out.push(0);
+  for (let i = a; i <= b; i++) out.push(i);
+  if (b < total - 1) out.push(0);
+  out.push(total);
+  return out;
+};
+const SPEC_SORTS = { 'spec-desc': 1, 'spec-asc': 1, 'unit-asc': 1 };
+const SCOPE = [['name', 'Name', 'nameL'], ['mfr', 'Manufacturer', 'mfrL'], ['desc', 'Description', 'descL']];
+// Nuxt UI semantic tokens (neutral: slate) — light / dark
+const THEMES = {
+  light: { bg: '#ffffff', soft: '#f8fafc', elev: '#f1f5f9', acc: '#e2e8f0', bd: '#e2e8f0', bda: '#cbd5e1', hi: '#0f172a', txt: '#334155', ton: '#475569', mut: '#64748b', dim: '#94a3b8', inv: '#ffffff', glass: 'rgba(255,255,255,0.8)', tint: 'rgba(255,255,255,0.22)', scheme: 'light' },
+  dark: { bg: '#0f172a', soft: '#1e293b', elev: '#1e293b', acc: '#334155', bd: '#1e293b', bda: '#334155', hi: '#ffffff', txt: '#e2e8f0', ton: '#cbd5e1', mut: '#94a3b8', dim: '#64748b', inv: '#0f172a', glass: 'rgba(15,23,42,0.75)', tint: 'rgba(15,23,42,0.18)', scheme: 'dark' }
+};
+// primary-500 in light → primary-400 in dark, as Nuxt UI does
+const DARK_PRIMARY = { '#22c55e': '#4ade80', '#16a34a': '#22c55e', '#15803d': '#16a34a', '#3b82f6': '#60a5fa' };
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { q: '', cat: 'all', mfrs: {}, pr: null, sr: null, sort: 'featured', page: 1, per: 12, view: 'grid', cart: 0, added: {}, mfrMore: false, theme: null, scope: { name: true, mfr: true, desc: true }, scopeOpen: false, qi: '', loading: false, sgOpen: false, sgActive: -1, sgLoading: false, filtersOpen: false };
+  }
+
+  componentWillUnmount() { clearTimeout(this.qTimer); clearTimeout(this.lTimer); }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (!prevState) return;
+    if (!prevState.filtersOpen && this.state.filtersOpen) { const el = document.getElementById('filters-close'); if (el) el.focus(); }
+    if (prevState.filtersOpen && !this.state.filtersOpen) { const el = document.getElementById('filters-trigger'); if (el && el.offsetParent) el.focus(); }
+  }
+
+  // simulated network latency (stands in for the API / useFetch call)
+  pulse() { clearTimeout(this.lTimer); this.lTimer = setTimeout(() => this.setState({ loading: false }), 350); }
+
+  setQuery(v) {
+    clearTimeout(this.qTimer);
+    if (!v.trim()) { this.setState({ qi: v, q: '', loading: false, sgLoading: false, sgOpen: false, sgActive: -1, page: 1 }); return; }
+    this.setState({ qi: v, sgOpen: v.trim().length >= 2, sgActive: -1, sgLoading: true, loading: true });
+    this.qTimer = setTimeout(() => this.setState({ q: v, page: 1, loading: false, sgLoading: false }), 450);
+  }
+
+  commitNow() {
+    clearTimeout(this.qTimer);
+    this.setState({ q: this.state.qi, page: 1, loading: false, sgLoading: false, sgOpen: false, sgActive: -1 });
+  }
+
+  pickSg(patch) {
+    clearTimeout(this.qTimer);
+    const next = { sgOpen: false, sgActive: -1, page: 1, sgLoading: false, loading: true };
+    if (patch.cat && patch.cat !== this.state.cat) Object.assign(next, { mfrs: {}, pr: null, sr: null, mfrMore: false });
+    this.setState(Object.assign(next, patch));
+    this.pulse();
+  }
+
+  setCat(k) {
+    const sort = (k !== 'p' && k !== 'b' && SPEC_SORTS[this.state.sort]) ? 'featured' : this.state.sort;
+    this.setState({ cat: k, mfrs: {}, pr: null, sr: null, page: 1, sort: sort, mfrMore: false, loading: true });
+    this.pulse();
+  }
+
+  rangeModel(key, b, step) {
+    const r = eff(this.state[key], b);
+    const raw = this.state[key];
+    const span = (b[1] - b[0]) || 1;
+    return {
+      b0: b[0], b1: b[1], step: step, lo: r[0], hi: r[1],
+      rawLo: raw ? raw[0] : b[0], rawHi: raw ? raw[1] : b[1],
+      left: ((r[0] - b[0]) / span) * 100, right: ((b[1] - r[1]) / span) * 100,
+      slideLo: (e) => { const cur = eff(this.state[key], b); cur[0] = Math.min(Number(e.target.value), cur[1]); this.setState({ [key]: cur, page: 1 }); },
+      slideHi: (e) => { const cur = eff(this.state[key], b); cur[1] = Math.max(Number(e.target.value), cur[0]); this.setState({ [key]: cur, page: 1 }); },
+      typeLo: (e) => { const cur = (this.state[key] || b).slice(); cur[0] = e.target.value; this.setState({ [key]: cur, page: 1 }); },
+      typeHi: (e) => { const cur = (this.state[key] || b).slice(); cur[1] = e.target.value; this.setState({ [key]: cur, page: 1 }); },
+      norm: () => { if (this.state[key]) this.setState({ [key]: eff(this.state[key], b) }); }
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const isDark = (s.theme ?? this.props.theme ?? 'light') === 'dark';
+    const th = isDark ? THEMES.dark : THEMES.light;
+    const basePrimary = this.props.primary ?? '#22c55e';
+    const primary = isDark ? (DARK_PRIMARY[String(basePrimary).toLowerCase()] || basePrimary) : basePrimary;
+    const cat = s.cat;
+    const C = CAT[cat];
+    const hasSpec = cat === 'p' || cat === 'b';
+    const tokens = s.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const sc = s.scope;
+    const onList = SCOPE.filter((x) => sc[x[0]]);
+    const onCount = onList.length;
+    const fields = onList.map((x) => x[2]);
+    const base = tokens.length ? P.filter((p) => tokens.every((t) => fields.some((f) => p[f].indexOf(t) !== -1))) : P;
+    const scopeItems = SCOPE.map((x) => {
+      const on = !!sc[x[0]];
+      const locked = on && onCount === 1;
+      return {
+        label: x[1], on: on, checked: on ? 'true' : 'false', op: locked ? 0.6 : 1,
+        toggle: () => { if (locked) return; const cur = Object.assign({}, this.state.scope); cur[x[0]] = !on; this.setState({ scope: cur, page: 1 }); }
+      };
+    });
+    const scopeLabel = onCount === 3 ? 'All fields' : onList.map((x) => x[1]).join(', ');
+    const searchPlaceholder = 'Search by ' + (onCount === 3 ? 'name, manufacturer or description' : onList.map((x) => x[1].toLowerCase()).join(' or ')) + '…';
+    const inCat = cat === 'all' ? base : base.filter((p) => p.cat === cat);
+
+    const pb = BOUNDS[cat].price;
+    const sb = BOUNDS[cat].spec;
+    const pr = eff(s.pr, pb);
+    const sr = eff(s.sr, sb);
+    const priceActive = !!s.pr && (pr[0] > pb[0] || pr[1] < pb[1]);
+    const specActive = hasSpec && !!s.sr && (sr[0] > sb[0] || sr[1] < sb[1]);
+    const anyM = Object.keys(s.mfrs).length > 0;
+    const facet = inCat.filter((p) => p.price >= pr[0] && p.price <= pr[1] && (!hasSpec || (p.spec >= sr[0] && p.spec <= sr[1])));
+    const results = anyM ? facet.filter((p) => s.mfrs[p.mfr]) : facet;
+
+    // sorting
+    let sortKey = s.sort;
+    if (!hasSpec && SPEC_SORTS[sortKey]) sortKey = 'featured';
+    const first = tokens[0] || '';
+    const sorters = {
+      featured: (a, b) => (tokens.length ? ((b.nameL.indexOf(first) !== -1 ? 1 : 0) - (a.nameL.indexOf(first) !== -1 ? 1 : 0)) : 0) || a.id - b.id,
+      'price-asc': (a, b) => a.price - b.price,
+      'price-desc': (a, b) => b.price - a.price,
+      'name-asc': (a, b) => a.name.localeCompare(b.name),
+      'spec-desc': (a, b) => b.spec - a.spec || a.price - b.price,
+      'spec-asc': (a, b) => a.spec - b.spec || a.price - b.price,
+      'unit-asc': (a, b) => a.unitPrice - b.unitPrice
+    };
+    const sorted = results.slice().sort(sorters[sortKey]);
+    const sortOpts = [
+      { v: 'featured', l: tokens.length ? 'Best match' : 'Featured' },
+      { v: 'price-asc', l: 'Price: low to high' },
+      { v: 'price-desc', l: 'Price: high to low' },
+      { v: 'name-asc', l: 'Name: A–Z' }
+    ];
+    if (hasSpec) {
+      sortOpts.push({ v: 'spec-desc', l: C.spec + ': highest first' });
+      sortOpts.push({ v: 'spec-asc', l: C.spec + ': lowest first' });
+      sortOpts.push({ v: 'unit-asc', l: 'Price per ' + C.unit + ': lowest first' });
+    }
+
+    // pagination
+    const per = s.per;
+    const total = sorted.length;
+    const pages = Math.max(1, Math.ceil(total / per));
+    const page = Math.min(s.page, pages);
+    const from = total ? (page - 1) * per + 1 : 0;
+    const to = Math.min(page * per, total);
+    const rows = sorted.slice((page - 1) * per, page * per).map((p) => {
+      const qty = s.added[p.id] || 0;
+      return Object.assign({}, p, {
+        added: qty > 0, notAdded: qty === 0, qtyLabel: 'In cart · ' + qty,
+        add: () => this.setState({ cart: this.state.cart + 1, added: Object.assign({}, this.state.added, { [p.id]: (this.state.added[p.id] || 0) + 1 }) })
+      });
+    });
+    const pageBtns = pageList(page, pages).map((n, i) => ({
+      isGap: n === 0, isPage: n !== 0, label: String(n), current: n === page ? 'page' : 'false',
+      bg: n === page ? primary : 'var(--bg)', fg: n === page ? 'var(--inv)' : 'var(--txt)', ring: n === page ? primary : 'var(--bda)',
+      go: () => { this.setState({ page: n }); }
+    }));
+
+    // category tabs
+    const tabs = ['all', 'p', 'b', 'c'].map((k) => {
+      const active = k === cat;
+      return {
+        label: CAT[k].tab, count: k === 'all' ? base.length : base.filter((p) => p.cat === k).length,
+        pressed: active ? 'true' : 'false', pick: () => this.setCat(k),
+        bg: active ? primary : 'transparent', fg: active ? 'var(--inv)' : 'var(--ton)',
+        cbg: active ? th.tint : 'var(--acc)', cfg: active ? 'var(--inv)' : 'var(--ton)',
+        isAll: k === 'all', isP: k === 'p', isB: k === 'b', isC: k === 'c'
+      };
+    });
+
+    // manufacturers facet
+    const counts = {};
+    facet.forEach((p) => { counts[p.mfr] = (counts[p.mfr] || 0) + 1; });
+    const mfrAll = MFRS[cat].map((n) => {
+      const checked = !!s.mfrs[n];
+      const c = counts[n] || 0;
+      return {
+        name: n, count: c, checked: checked, disabled: !c && !checked, op: !c && !checked ? 0.5 : 1, id: 'mfr-' + slugify(n),
+        toggle: () => { const m = Object.assign({}, this.state.mfrs); if (m[n]) delete m[n]; else m[n] = true; this.setState({ mfrs: m, page: 1 }); }
+      };
+    });
+    const LIMIT = 8;
+    const mfrShown = (s.mfrMore || s.filtersOpen) ? mfrAll : mfrAll.filter((m, i) => i < LIMIT || m.checked);
+    const mfrHasMore = mfrAll.length > LIMIT && !s.filtersOpen;
+
+    // spec presets
+    const presets = hasSpec ? PRESETS[cat].map((x) => {
+      const on = specActive && sr[0] === x[1] && sr[1] === x[2];
+      return {
+        label: x[0], pressed: on ? 'true' : 'false',
+        bg: on ? hexRgba(primary, 0.1) : 'var(--bg)', ring: on ? hexRgba(primary, 0.5) : 'var(--bda)', fg: on ? 'var(--hi)' : 'var(--txt)',
+        pick: () => this.setState({ sr: on ? null : [x[1], x[2]], page: 1 })
+      };
+    }) : [];
+
+    // active filter chips
+    const chips = [];
+    if (tokens.length) chips.push({ kind: 'Search', label: '“' + s.q.trim() + '”', remove: () => this.setQuery('') });
+    Object.keys(s.mfrs).forEach((n) => chips.push({ kind: 'Brand', label: n, remove: () => { const m = Object.assign({}, this.state.mfrs); delete m[n]; this.setState({ mfrs: m, page: 1 }); } }));
+    if (priceActive) chips.push({ kind: 'Price', label: FMT0.format(pr[0]) + ' – ' + FMT0.format(pr[1]), remove: () => this.setState({ pr: null, page: 1 }) });
+    if (specActive) chips.push({ kind: C.spec, label: sr[0] + '–' + sr[1] + ' ' + C.unit, remove: () => this.setState({ sr: null, page: 1 }) });
+
+    const statusText = s.loading ? 'Loading products…' : total
+      ? 'Showing ' + from + '–' + to + ' of ' + total + ' products' + (tokens.length ? ' for “' + s.q.trim() + '”' : '')
+      : '0 products found';
+    const isGrid = s.view === 'grid';
+
+    // search suggestions (built from the "fetched" query)
+    const hlParts = (text) => {
+      if (!tokens.length) return [{ t: text, fw: 400, c: 'inherit' }];
+      const re = new RegExp('(' + tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+      return text.split(re).filter((x) => x !== '').map((x) => {
+        const hit = tokens.indexOf(x.toLowerCase()) !== -1;
+        return { t: x, fw: hit ? 700 : 400, c: hit ? 'var(--hi)' : 'inherit' };
+      });
+    };
+    const flat = [];
+    const mkItem = (o) => {
+      const idx = flat.length;
+      const it = Object.assign({
+        id: 'sg-' + idx, selected: idx === s.sgActive ? 'true' : 'false', bg: idx === s.sgActive ? 'var(--elev)' : 'transparent',
+        hover: () => { if (this.state.sgActive !== idx) this.setState({ sgActive: idx }); },
+        isP: false, isB: false, isC: false, isM: false, isCat: false, hasPrice: false, price: ''
+      }, o);
+      flat.push(it);
+      return it;
+    };
+    const sgGroups = [];
+    if (tokens.length && !s.sgLoading) {
+      const prods = base.slice().sort(sorters.featured).slice(0, 5).map((p) => mkItem({
+        parts: hlParts(p.name), meta: p.mfr + ' · ' + p.catLabel + (p.specLabel ? ' · ' + p.specLabel : ''),
+        isP: p.isP, isB: p.isB, isC: p.isC, hasPrice: true, price: p.priceLabel,
+        pick: () => this.pickSg({ q: p.name, qi: p.name, cat: p.cat })
+      }));
+      if (prods.length) sgGroups.push({ id: 'sg-g-products', label: 'Products', items: prods });
+      if (sc.mfr) {
+        const ms = MFRS.all.filter((n) => tokens.every((t) => n.toLowerCase().indexOf(t) !== -1)).slice(0, 3).map((n) => mkItem({
+          parts: hlParts(n), meta: P.filter((p) => p.mfr === n).length + ' products', isM: true,
+          pick: () => { const k = (this.state.cat === 'all' || MFRS[this.state.cat].indexOf(n) !== -1) ? this.state.cat : 'all'; this.pickSg({ q: '', qi: '', cat: k, mfrs: { [n]: true } }); }
+        }));
+        if (ms.length) sgGroups.push({ id: 'sg-g-brands', label: 'Manufacturers', items: ms });
+      }
+      const cs = ['p', 'b', 'c'].filter((k) => tokens.every((t) => CAT[k].label.toLowerCase().indexOf(t) !== -1)).map((k) => mkItem({
+        parts: hlParts(CAT[k].label), meta: P.filter((p) => p.cat === k).length + ' products', isCat: true,
+        pick: () => this.pickSg({ q: '', qi: '', cat: k })
+      }));
+      if (cs.length) sgGroups.push({ id: 'sg-g-categories', label: 'Categories', items: cs });
+    }
+    const onQKey = (e) => {
+      const n = flat.length;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!this.state.sgOpen) { if (this.state.qi.trim().length >= 2) this.setState({ sgOpen: true }); return; }
+        if (n) this.setState({ sgActive: (this.state.sgActive + 1) % n });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (n) this.setState({ sgActive: this.state.sgActive <= 0 ? n - 1 : this.state.sgActive - 1 });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const a = this.state.sgActive;
+        if (this.state.sgOpen && a >= 0 && flat[a]) flat[a].pick(); else this.commitNow();
+      } else if (e.key === 'Escape') {
+        if (this.state.sgOpen) { e.preventDefault(); this.setState({ sgOpen: false, sgActive: -1 }); }
+      }
+    };
+    const sgVisible = s.sgOpen && s.qi.trim().length >= 2;
+    const activeCount = Object.keys(s.mfrs).length + (priceActive ? 1 : 0) + (specActive ? 1 : 0);
+    const SKEL = [{ w1: 70, w2: 40 }, { w1: 55, w2: 30 }, { w1: 80, w2: 45 }, { w1: 60, w2: 35 }, { w1: 75, w2: 50 }, { w1: 65, w2: 38 }];
+
+    return {
+      primary: primary, primarySoft: hexRgba(primary, 0.1), primaryRing: hexRgba(primary, 0.3),
+      cart: s.cart, hasCart: s.cart > 0,
+      catLabel: C.label, catDesc: C.desc, catTotal: P.filter((p) => cat === 'all' || p.cat === cat).length,
+      q: s.qi, hasQ: s.qi.length > 0,
+      showClear: s.qi.length > 0 && !(s.loading && s.qi.trim().length > 0),
+      loadingQ: s.loading && s.qi.trim().length > 0,
+      onQ: (e) => this.setQuery(e.target.value),
+      onQFocus: () => { if (this.state.qi.trim().length >= 2) this.setState({ sgOpen: true }); },
+      onQKey: onQKey,
+      clearQ: () => this.setQuery(''),
+      sgOpen: sgVisible, sgExpanded: sgVisible ? 'true' : 'false',
+      sgActiveId: sgVisible && s.sgActive >= 0 ? 'sg-' + s.sgActive : '',
+      sgLoading: s.sgLoading, sgBusy: s.sgLoading ? 'true' : 'false',
+      sgReady: !s.sgLoading && flat.length > 0, sgEmpty: !s.sgLoading && tokens.length > 0 && flat.length === 0,
+      sgGroups: sgGroups, sgQuery: s.qi.trim(),
+      sgCountText: s.sgLoading ? '' : base.length + ' matching products',
+      closeSg: () => this.setState({ sgOpen: false, sgActive: -1 }),
+      skel4: SKEL.slice(0, 4), skelCards: SKEL,
+      busy: s.loading ? 'true' : 'false', skelGrid: s.loading && isGrid, skelTable: s.loading && !isGrid,
+      filtersOpen: s.filtersOpen, filtersCls: s.filtersOpen ? 'is-open' : '',
+      asideRole: s.filtersOpen ? 'dialog' : 'complementary', ariaModal: s.filtersOpen ? 'true' : 'false',
+      filtersExpanded: s.filtersOpen ? 'true' : 'false',
+      openFilters: () => this.setState({ filtersOpen: true, sgOpen: false, scopeOpen: false }),
+      closeFilters: () => this.setState({ filtersOpen: false }),
+      asideKey: (e) => { if (e.key === 'Escape' && this.state.filtersOpen) { e.preventDefault(); this.setState({ filtersOpen: false }); } },
+      activeCount: activeCount, hasActiveCount: activeCount > 0,
+      showNLabel: 'Show ' + total + (total === 1 ? ' product' : ' products'),
+      tabs: tabs,
+      mfrShown: mfrShown, mfrHasMore: mfrHasMore,
+      mfrMoreLabel: s.mfrMore ? 'Show less' : 'Show all ' + mfrAll.length, mfrChevron: s.mfrMore ? 180 : 0,
+      toggleMfrMore: () => this.setState({ mfrMore: !this.state.mfrMore }),
+      price: this.rangeModel('pr', pb, 1),
+      hasSpec: hasSpec, noSpec: !hasSpec,
+      spec: this.rangeModel('sr', sb, hasSpec ? C.step : 1),
+      specTitle: hasSpec ? C.spec + ' (' + C.unit + ')' : '', specUnit: hasSpec ? C.unit : '', specName: hasSpec ? C.spec.toLowerCase() : '',
+      specCol: cat === 'p' ? 'Power' : cat === 'b' ? 'Capacity' : 'Power / cap.',
+      presets: presets,
+      goPanels: () => this.setCat('p'), goBatteries: () => this.setCat('b'),
+      chips: chips, hasChips: chips.length > 0,
+      clearAll: () => { clearTimeout(this.qTimer); this.setState({ q: '', qi: '', mfrs: {}, pr: null, sr: null, page: 1, loading: false, sgLoading: false, sgOpen: false }); },
+      statusText: statusText,
+      sort: sortKey, sortOpts: sortOpts, onSort: (e) => this.setState({ sort: e.target.value, page: 1 }),
+      per: String(per), onPer: (e) => this.setState({ per: Number(e.target.value), page: 1 }),
+      isGrid: isGrid ? 'true' : 'false', isTable: isGrid ? 'false' : 'true',
+      gridBg: isGrid ? 'var(--elev)' : 'var(--bg)', gridFg: isGrid ? 'var(--hi)' : 'var(--mut)',
+      tableBg: isGrid ? 'var(--bg)' : 'var(--elev)', tableFg: isGrid ? 'var(--mut)' : 'var(--hi)',
+      th: th, isDark: isDark, isLight: !isDark,
+      themeToggleLabel: isDark ? 'Switch to light mode' : 'Switch to dark mode',
+      toggleTheme: () => this.setState({ theme: isDark ? 'light' : 'dark' }),
+      searchPlaceholder: searchPlaceholder, scopeLabel: scopeLabel, scopeItems: scopeItems,
+      scopeOpen: s.scopeOpen, scopeExpanded: s.scopeOpen ? 'true' : 'false', scopeChevron: s.scopeOpen ? 180 : 0,
+      toggleScope: () => this.setState({ scopeOpen: !this.state.scopeOpen }),
+      closeScope: () => this.setState({ scopeOpen: false }),
+      scopeAll: () => this.setState({ scope: { name: true, mfr: true, desc: true }, scopeOpen: false, page: 1 }),
+      setGrid: () => this.setState({ view: 'grid' }), setTable: () => this.setState({ view: 'table' }),
+      rows: rows, isEmpty: total === 0 && !s.loading, hasResults: total > 0 && !s.loading,
+      showGrid: total > 0 && isGrid && !s.loading, showTable: total > 0 && !isGrid && !s.loading,
+      pageBtns: pageBtns, isFirst: page <= 1, isLast: page >= pages,
+      prevOp: page <= 1 ? 0.5 : 1, nextOp: page >= pages ? 0.5 : 1,
+      prev: () => this.setState({ page: Math.max(1, page - 1) }),
+      next: () => this.setState({ page: Math.min(pages, page + 1) })
+    };
+  }
+}
+</script>
+</body>
+</html>
