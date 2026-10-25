@@ -26,86 +26,172 @@
         v-if="data"
         :active="category"
         :counts="data.categoryCounts"
+        :query="categoryQuery"
         class="mt-5"
       />
     </header>
 
-    <section
+    <div
       v-if="data"
-      aria-label="Products"
-      :aria-busy="pending"
-      class="flex flex-col gap-4 pt-8"
+      class="grid items-start gap-8 pt-8 lg:grid-cols-[248px_minmax(0,1fr)]"
     >
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p
-          role="status"
-          class="text-sm text-muted"
-        >
-          {{ statusText }}
-        </p>
-        <div class="flex items-center gap-2">
-          <label
-            for="sort"
-            class="text-sm text-muted"
-            >Sort by</label
-          >
-          <USelect
-            id="sort"
-            :model-value="params.sort"
-            :items="sortItems"
-            class="min-w-52"
-            @update:model-value="(sort) => update({ sort, page: 1 })"
-          />
-        </div>
-      </div>
-
-      <ul
-        :class="[
-          'grid grid-cols-[repeat(auto-fill,minmax(232px,1fr))] gap-4 transition-opacity',
-          pending && 'opacity-50'
-        ]"
+      <aside
+        aria-labelledby="filters-title"
+        class="hidden flex-col gap-6 lg:flex"
       >
-        <li
-          v-for="product in data.products"
-          :id="product.id"
-          :key="product.id"
+        <h2
+          id="filters-title"
+          class="flex items-center gap-2 font-semibold text-highlighted"
         >
-          <UiProductCard :product="product" />
-        </li>
-      </ul>
-
-      <div
-        v-if="data.total"
-        class="flex flex-wrap items-center justify-between gap-3 pt-2"
-      >
-        <div class="flex items-center gap-2">
-          <label
-            for="per-page"
-            class="text-sm text-muted"
-            >Per page</label
-          >
-          <USelect
-            id="per-page"
-            :model-value="params.perPage"
-            :items="perPageItems"
-            size="sm"
-            @update:model-value="(perPage) => update({ perPage, page: 1 })"
+          <UIcon
+            name="i-lucide-funnel"
+            class="size-4.5"
           />
-        </div>
-        <UPagination
-          v-if="data.pageCount > 1"
-          :page="page"
-          :total="data.total"
-          :items-per-page="data.params.perPage"
-          :show-edges="true"
-          :sibling-count="1"
-          :to="(n: number) => linkTo({ page: n })"
-          size="sm"
-          :ui="{ root: 'flex' }"
-          aria-label="Pagination"
+          Filters
+        </h2>
+
+        <UiManufacturerFilter
+          :key="category ?? 'all'"
+          :manufacturers="data.manufacturers"
+          :selected="selectedManufacturers"
+          @update:selected="selectManufacturers"
         />
-      </div>
-    </section>
+      </aside>
+
+      <section
+        aria-label="Products"
+        :aria-busy="pending"
+        class="flex flex-col gap-4"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p
+            role="status"
+            class="text-sm text-muted"
+          >
+            {{ statusText }}
+          </p>
+          <div class="flex items-center gap-2">
+            <UDrawer
+              v-model:open="filtersOpen"
+              title="Filters"
+              close
+              :ui="{
+                content: 'max-h-[85dvh] lg:hidden',
+                container: 'min-h-0 overflow-hidden',
+                body: 'min-h-0 overflow-y-auto',
+                footer: '-mx-4 flex-row gap-2 border-t border-default px-4 pt-4'
+              }"
+            >
+              <UButton
+                label="Filters"
+                icon="i-lucide-funnel"
+                color="neutral"
+                variant="outline"
+                class="lg:hidden"
+              >
+                <template
+                  v-if="activeFilterCount"
+                  #trailing
+                >
+                  <UBadge
+                    :label="activeFilterCount"
+                    size="sm"
+                    class="rounded-full"
+                  />
+                </template>
+              </UButton>
+
+              <template #body>
+                <UiManufacturerFilter
+                  show-all
+                  :manufacturers="data.manufacturers"
+                  :selected="selectedManufacturers"
+                  @update:selected="selectManufacturers"
+                />
+              </template>
+
+              <template #footer>
+                <UButton
+                  label="Clear all"
+                  color="neutral"
+                  variant="outline"
+                  size="lg"
+                  :disabled="!activeFilterCount"
+                  class="flex-1 justify-center"
+                  @click="selectManufacturers([])"
+                />
+                <UButton
+                  :label="`Show ${data.total} products`"
+                  size="lg"
+                  class="flex-2 justify-center"
+                  @click="filtersOpen = false"
+                />
+              </template>
+            </UDrawer>
+
+            <label
+              for="sort"
+              class="sr-only text-sm text-muted sm:not-sr-only"
+              >Sort by</label
+            >
+            <USelect
+              id="sort"
+              :model-value="params.sort"
+              :items="sortItems"
+              class="min-w-44 sm:min-w-52"
+              @update:model-value="(sort) => update({ sort, page: 1 })"
+            />
+          </div>
+        </div>
+
+        <ul
+          :class="[
+            'grid grid-cols-[repeat(auto-fill,minmax(232px,1fr))] gap-4 transition-opacity',
+            pending && 'opacity-50'
+          ]"
+        >
+          <li
+            v-for="product in data.products"
+            :id="product.id"
+            :key="product.id"
+          >
+            <UiProductCard :product="product" />
+          </li>
+        </ul>
+
+        <div
+          v-if="data.total"
+          class="flex flex-wrap items-center justify-between gap-3 pt-2"
+        >
+          <div class="flex items-center gap-2">
+            <label
+              for="per-page"
+              class="text-sm text-muted"
+              >Per page</label
+            >
+            <USelect
+              id="per-page"
+              :model-value="params.perPage"
+              :items="perPageItems"
+              size="sm"
+              @update:model-value="(perPage) => update({ perPage, page: 1 })"
+            />
+          </div>
+          <UPagination
+            v-if="data.pageCount > 1"
+            :page="page"
+            :total="data.total"
+            :items-per-page="data.params.perPage"
+            :show-edges="true"
+            :sibling-count="1"
+            :to="(n: number) => linkTo({ page: n })"
+            size="sm"
+            :ui="{ root: 'flex' }"
+            aria-label="Pagination"
+          />
+        </div>
+      </section>
+    </div>
   </UContainer>
 </template>
 
@@ -135,7 +221,7 @@ const breadcrumb = computed<BreadcrumbItem[]>(() => [
   { label: info.value.label }
 ])
 
-const { params, linkTo, update } = useListingState()
+const { params, categoryQuery, linkTo, update } = useListingState()
 
 const { data, status } = await useFetch<ProductsResponse>("/api/products", {
   query: computed(() => ({
@@ -145,6 +231,21 @@ const { data, status } = await useFetch<ProductsResponse>("/api/products", {
 })
 
 const pending = computed(() => status.value === "pending")
+
+function selectManufacturers(manufacturer: string[]) {
+  return update({ manufacturer, page: 1 })
+}
+
+/** One per selected Manufacturer, as the chips will show them */
+const activeFilterCount = computed(() => selectedManufacturers.value.length)
+
+const filtersOpen = ref(false)
+
+// From the URL rather than the response, so toggles during a refetch don't
+// start from stale params; unknown slugs are dropped as the server does
+const selectedManufacturers = computed(() =>
+  params.value.manufacturer.filter((slug) => data.value?.manufacturers.some((m) => m.slug === slug))
+)
 
 const page = computed(() => data.value?.params.page ?? 1)
 

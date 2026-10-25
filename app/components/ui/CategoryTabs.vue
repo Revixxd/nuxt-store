@@ -9,7 +9,7 @@
         :key="tab.to"
       >
         <NuxtLink
-          :to="tab.to"
+          :to="{ path: tab.to, query }"
           :aria-current="tab.active ? 'page' : undefined"
           :class="[
             'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
@@ -39,9 +39,10 @@
 import { ALL_PRODUCTS, CATEGORIES, CATEGORY_IDS } from "#shared/catalog"
 import type { Category } from "#shared/catalog"
 
-const { active, counts } = defineProps<{
+const { active, counts, query } = defineProps<{
   active: Category | null
   counts: Record<Category, number>
+  query: Record<string, string>
 }>()
 
 const tabs = computed(() => [
