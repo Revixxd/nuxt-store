@@ -1,23 +1,15 @@
 import { z } from "zod"
-import { CATEGORY_IDS, PER_PAGE } from "../../shared/catalog"
-import type { Category, ProductsResponse } from "../../shared/catalog"
+import { CATEGORY_IDS } from "../../shared/catalog"
+import type { Category } from "../../shared/catalog"
+import type { ProductsResponse } from "../../shared/listing"
+import { queryListing } from "../lib/listing"
 
-const querySchema = z.object({
+const categorySchema = z.object({
   category: z.enum(CATEGORY_IDS as [Category, ...Category[]]).optional()
 })
 
 export default defineEventHandler(async (event): Promise<ProductsResponse> => {
-  const { category } = await getValidatedQuery(event, querySchema.parse)
-  const products = await getProducts()
+  const { category } = await getValidatedQuery(event, categorySchema.parse)
 
-  const inCategory = category ? products.filter((p) => p.category === category) : products
-  const categoryCounts = Object.fromEntries(
-    CATEGORY_IDS.map((id) => [id, products.filter((p) => p.category === id).length])
-  ) as Record<Category, number>
-
-  return {
-    products: inCategory.slice(0, PER_PAGE),
-    total: inCategory.length,
-    categoryCounts
-  }
+  return queryListing(await getProducts(), category ?? null, getQuery(event))
 })

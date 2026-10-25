@@ -62,15 +62,6 @@ export function isCategory(value: unknown): value is Category {
   return typeof value === "string" && value in CATEGORIES
 }
 
-export const PER_PAGE = 12
-
-export interface ProductsResponse {
-  products: Product[]
-  total: number
-  /** Products per Category, for the Category tabs */
-  categoryCounts: Record<Category, number>
-}
-
 export function slugify(text: string): string {
   return text
     .toLowerCase()
