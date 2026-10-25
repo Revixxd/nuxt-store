@@ -201,7 +201,24 @@
           </div>
         </div>
 
+        <UiActiveFilters
+          v-if="chips.length"
+          :chips="chips"
+          :clear-to="clearAllTo"
+        />
+
+        <UEmpty
+          v-if="!data.total"
+          icon="i-lucide-search"
+          title="No products match your filters"
+          description="Try a different search term, widen the price range or remove some manufacturers."
+          :actions="[{ label: 'Clear all filters', to: clearAllTo }]"
+          variant="naked"
+          class="rounded-lg border border-dashed border-accented py-16"
+        />
+
         <ul
+          v-else
           :class="[
             'grid grid-cols-[repeat(auto-fill,minmax(232px,1fr))] gap-4 transition-opacity',
             pending && 'opacity-50'
@@ -263,7 +280,9 @@ import {
   sortsFor,
   toListingQuery
 } from "#shared/listing"
-import type { ProductsResponse, Range } from "#shared/listing"
+import type { ListingParams, ProductsResponse, Range } from "#shared/listing"
+import { formatPriceRange, formatRatingRange } from "#shared/format"
+import type { ActiveFilterChip } from "~/components/ui/ActiveFilters.vue"
 
 definePageMeta({
   layout: "catalog",
@@ -356,10 +375,73 @@ const activeFilterCount = computed(() => {
   )
 })
 
+function shownWith(changes: Partial<ListingParams>) {
+  const shown = data.value?.params ?? params.value
+  return { query: toListingQuery({ ...shown, ...changes, page: 1 }) }
+}
+
+const clearAllTo = computed(() =>
+  shownWith({
+    q: undefined,
+    manufacturer: [],
+    priceMin: undefined,
+    priceMax: undefined,
+    ratingMin: undefined,
+    ratingMax: undefined
+  })
+)
+
+const chips = computed<ActiveFilterChip[]>(() => {
+  if (!data.value) return []
+  const { params: shown, manufacturers, priceBounds, ratingBounds } = data.value
+  const result: ActiveFilterChip[] = []
+
+  if (shown.q) {
+    result.push({
+      key: "q",
+      kind: "Search",
+      label: `“${shown.q}”`,
+      to: shownWith({ q: undefined })
+    })
+  }
+  for (const slug of shown.manufacturer) {
+    result.push({
+      key: `manufacturer:${slug}`,
+      kind: "Manufacturer",
+      label: manufacturers.find((m) => m.slug === slug)?.name ?? slug,
+      to: shownWith({ manufacturer: shown.manufacturer.filter((s) => s !== slug) })
+    })
+  }
+  if (shown.priceMin !== undefined || shown.priceMax !== undefined) {
+    result.push({
+      key: "price",
+      kind: "Price",
+      label: formatPriceRange(shown.priceMin ?? priceBounds.min, shown.priceMax ?? priceBounds.max),
+      to: shownWith({ priceMin: undefined, priceMax: undefined })
+    })
+  }
+  if (
+    ratingFilter.value &&
+    ratingBounds &&
+    (shown.ratingMin !== undefined || shown.ratingMax !== undefined)
+  ) {
+    const { unit } = ratingFilter.value
+    result.push({
+      key: "rating",
+      kind: RATING_FILTERS[unit].name,
+      label: formatRatingRange(
+        shown.ratingMin ?? ratingBounds.min,
+        shown.ratingMax ?? ratingBounds.max,
+        unit
+      ),
+      to: shownWith({ ratingMin: undefined, ratingMax: undefined })
+    })
+  }
+  return result
+})
+
 const filtersOpen = ref(false)
 
-// From the URL rather than the response, so toggles during a refetch don't
-// start from stale params; unknown slugs are dropped as the server does
 const selectedManufacturers = computed(() =>
   params.value.manufacturer.filter((slug) => data.value?.manufacturers.some((m) => m.slug === slug))
 )

@@ -27,3 +27,11 @@ export function formatUnitPrice(unitPrice: number, unit: RatingUnit): string {
 export function formatRating(rating: number, unit: RatingUnit): string {
   return `${rating} ${unit}`
 }
+
+export function formatPriceRange(min: number, max: number): string {
+  return `${eurWhole.format(min)} – ${eurWhole.format(max)}`
+}
+
+export function formatRatingRange(min: number, max: number, unit: RatingUnit): string {
+  return `${min}–${max} ${unit}`
+}
